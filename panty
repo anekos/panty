@@ -43,6 +43,8 @@ function get_stockings () {
 }
 
 function initialize () {
+  echo 'initialize'
+
   # set next_role_number
   local current_stockings=0
 
@@ -68,7 +70,8 @@ function spawn () {
   local name="STOCKING-$next_role_number"
 
   echo "spawn: $name"
-  gvim --role "$name" --servername "$name"
+  gvim --role "$name" --servername "$name" --echo-wid | read window
+  echo xdotool windowunmap "${window# *: }"
 
   next_role_number=$(( next_role_number + 1 ))
 }
@@ -90,6 +93,15 @@ function main_restart () {
   initialize
 }
 
+function wait_for_x () {
+  echo 'wait_for_x'
+  while true
+  do
+    sleep 1
+    &>1 xprop -root > /dev/null && return
+  done
+}
+
 function main_daemon () {
   if [ "${#@}" -eq 0 ]
   then
@@ -98,6 +110,10 @@ function main_daemon () {
     local targets=("$@")
   fi
 
+  wait_for_x
+
+  initialize
+
   echo "daemon: ${targets[@]}"
   inotifywait -e move,delete,close_write  -r "${targets[@]}"
   sleep "$inotify_event_delay"
@@ -105,6 +121,10 @@ function main_daemon () {
   main_restart
 
   main_daemon "$@"
+}
+
+function main_list () {
+  get_stockings
 }
 
 function main_summon () {
@@ -123,7 +143,7 @@ function main_summon () {
   local window="${found%:*}"
   local role="${found#*:}"
 
-  echo "summon: $role"
+  echo "summon: $found"
 
   # Move a stockin to current workspace
   xdotool set_desktop_for_window "$window" "$desktop"
@@ -148,9 +168,10 @@ function main () {
   fi
 
   exec 2>&1
-  echo "Usage: panty summon <GVIM ARGS>...."
-  echo "       panty initialize"
-  echo "       panty restart"
+  echo 'Usage: panty summon <GVIM ARGS>....'
+  echo '       panty initialize'
+  echo '       panty restart'
+  echo '       panty list'
   exit 1
 }
 
