@@ -1,0 +1,130 @@
+#!/bin/bash
+
+##############################################################
+# .-,--.   ,.  ,-,-.  ,--,--'.  .       ,.  ,-,-.   .-,--.   #
+#  '|__/  / |  ` | |  `- |   |  |      / |  ` | |   ' |   \  #
+#  ,|    /~~|-.  | |-. , |   |  |     /~~|-.  | |-. , |   /  #
+#  `'  ,'   `-' ,' `-' `-'   `--|   ,'   `-' ,' `-' `-^--'   #
+#                            .- |                            #
+#                            `--'                            #
+# .---. ,--,--',,--.  ,--. ,-, , ,-_/ ,-,-.   ,---.          #
+# \___  `- |   |`, | | `-'  )|/  '  | ` | |   |  -'          #
+#     \  , |   |   | |   .   |\  .^ |   | |-. |  ,-'         #
+# `---'  `-'   `---' `--'   ,' ` `--'  ,' `-' `---|          #
+#                                              ,-.|          #
+#                                              `-+'          #
+##############################################################
+
+next_role_number=1
+max_stockings=10
+
+
+function new_role () {
+  next_role_number=$(( next_role_number + 1))
+}
+
+function get_role () {
+  local wid="$1"
+  xprop -id "$wid" -f WM_WINDOW_ROLE 8s WM_WINDOW_ROLE | sed 's/[^"]*"//' | sed 's/"$//' | grep -v 'not found'
+}
+
+function get_gvims () {
+  xdotool search --class 'gvim'
+}
+
+function initialize () {
+  # set next_role_number
+  local current_stockings=0
+  for pid in `get_gvims`
+  do
+    local role="$(get_role "$pid")"
+    if [[ $role =~ ^STOCKING-[0-9]+$ ]]
+    then
+      local number=${role#*-}
+      local current_stockings=$(( current_stockings + 1 ))
+      [[ $number -ge $next_role_number ]] && next_role_number=$(( number + 1 ))
+    fi
+  done
+
+  for nop in `seq $(( max_stockings - current_stockings ))`
+  do
+    spawn
+  done
+}
+
+function find_stocking () {
+  for pid in `get_gvims`
+  do
+    local role="$(get_role "$pid")"
+    if [[ $role =~ ^STOCKING-[0-9]+$ ]]
+    then
+      echo "$pid"
+      return
+    fi
+  done
+}
+
+function spawn () {
+  local name="STOCKING-$next_role_number"
+
+  gvim --role "$name" --servername "$name"
+
+  next_role_number=$(( next_role_number + 1 ))
+}
+
+function main_initialize () {
+  initialize
+}
+
+function main_summon () {
+  local found="$(find_stocking)"
+  local desktop="$(xdotool get_desktop)"
+
+  if [ -z "$found" ]
+  then
+    echo 'Stocking Not Found' 1>&2
+    initialize
+    local found="$(find_stocking)"
+  fi
+
+  [ -z "$found" ] && exit 1
+
+  # Move a stockin to current workspace
+  xdotool set_desktop_for_window "$found" "$desktop"
+
+  # Send file names
+  [ "$#" -gt 0 ] && gvim --servername "$(get_role "$found")" --remote "$@"
+
+  # Stocking becomes panty
+  xdotool set_window --role 'PANTY' "$found"
+
+  initialize
+}
+
+function main () {
+  local sub="$1"
+  shift
+
+  if [ -z "$sub" ]
+  then
+    exec 2>&1
+    echo "Usage: panty summon <GVIM ARGS>...."
+    echo "       panty initialize"
+    exit 1
+  fi
+
+  main_$sub "$@"
+}
+
+main "$@"
+
+
+# The MIT License (MIT)
+#
+# Copyright (c) anekos <panty-of-anekos@snca.net>
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
