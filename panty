@@ -17,6 +17,7 @@
 
 next_role_number=1
 max_stockings=10
+inotify_event_delay=0.3
 
 
 function new_role () {
@@ -87,6 +88,21 @@ function main_initialize () {
 function main_restart () {
   kill_em_all
   initialize
+}
+
+function main_daemon () {
+  if [ "${#@}" -eq 0 ]
+  then
+    local targets=(~/.vimrc ~/.vim)
+  else
+    local targets=("$@")
+  fi
+
+  echo "daemon: ${targets[@]}"
+  inotifywait -e move,delete,close_write  -r "${targets[@]}"
+  sleep "$inotify_event_delay"
+  main_restart
+  main_daemon "$@"
 }
 
 function main_summon () {
