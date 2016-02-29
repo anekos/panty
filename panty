@@ -32,18 +32,25 @@ function get_gvims () {
   xdotool search --class 'gvim'
 }
 
+# print "$window $role"
+function get_stockings () {
+  xdotool search --class 'gvim' | while read window
+  do
+    local role="$(get_role "$window")"
+    [[ $role =~ ^STOCKING-[0-9]+$ ]] && echo "$window:$role"
+  done
+}
+
 function initialize () {
   # set next_role_number
   local current_stockings=0
-  for pid in `get_gvims`
+
+  for found in `get_stockings`
   do
-    local role="$(get_role "$pid")"
-    if [[ $role =~ ^STOCKING-[0-9]+$ ]]
-    then
-      local number=${role#*-}
-      local current_stockings=$(( current_stockings + 1 ))
-      [[ $number -ge $next_role_number ]] && next_role_number=$(( number + 1 ))
-    fi
+    local role="${found#*:}"
+    local number=${role#*-}
+    local current_stockings=$(( current_stockings + 1 ))
+    [[ $number -ge $next_role_number ]] && next_role_number=$(( number + 1 ))
   done
 
   for nop in `seq $(( max_stockings - current_stockings ))`
@@ -53,26 +60,32 @@ function initialize () {
 }
 
 function find_stocking () {
-  for pid in `get_gvims`
-  do
-    local role="$(get_role "$pid")"
-    if [[ $role =~ ^STOCKING-[0-9]+$ ]]
-    then
-      echo "$pid"
-      return
-    fi
-  done
+  get_stockings | head -n 1
 }
 
 function spawn () {
   local name="STOCKING-$next_role_number"
 
+  echo "spawn: $name"
   gvim --role "$name" --servername "$name"
 
   next_role_number=$(( next_role_number + 1 ))
 }
 
+function kill_em_all () {
+  for found in `get_stockings`
+  do
+    local window="${found%:*}"
+    xdotool windowkill "$window"
+  done
+}
+
 function main_initialize () {
+  initialize
+}
+
+function main_restart () {
+  kill_em_all
   initialize
 }
 
@@ -89,14 +102,19 @@ function main_summon () {
 
   [ -z "$found" ] && exit 1
 
+  local window="${found%:*}"
+  local role="${found#*:}"
+
+  echo "summon: $role"
+
   # Move a stockin to current workspace
-  xdotool set_desktop_for_window "$found" "$desktop"
+  xdotool set_desktop_for_window "$window" "$desktop"
 
   # Send file names
-  [ "$#" -gt 0 ] && gvim --servername "$(get_role "$found")" --remote "$@"
+  [ "$#" -gt 0 ] && gvim --servername "$role" --remote "$@"
 
   # Stocking becomes panty
-  xdotool set_window --role 'PANTY' "$found"
+  xdotool set_window --role 'PANTY' "$window"
 
   initialize
 }
@@ -105,15 +123,17 @@ function main () {
   local sub="$1"
   shift
 
-  if [ -z "$sub" ]
+  if [ -n "$sub" ] && type "main_$sub" &> /dev/null
   then
-    exec 2>&1
-    echo "Usage: panty summon <GVIM ARGS>...."
-    echo "       panty initialize"
-    exit 1
+    "main_$sub" "$@"
+    exit 0
   fi
 
-  main_$sub "$@"
+  exec 2>&1
+  echo "Usage: panty summon <GVIM ARGS>...."
+  echo "       panty initialize"
+  echo "       panty restart"
+  exit 1
 }
 
 main "$@"
