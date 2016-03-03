@@ -62,7 +62,7 @@ function main_summon () {
   xdotool set_window --role 'PANTY' "$window"
 }
 
-function main_daemon () {
+function main_watcher () {
   if [ "${#@}" -eq 0 ]
   then
     local targets=(~/.vimrc ~/.vim)
@@ -104,9 +104,9 @@ function main () {
 
   exec 2>&1
   echo 'Usage: panty summon <GVIM ARGS>....'
-  echo '       panty initialize'
+  echo '       panty stocker'
+  echo '       panty watcher'
   echo '       panty kill'
-  echo '       panty list'
   exit 1
 }
 
