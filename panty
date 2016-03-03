@@ -72,14 +72,14 @@ function main_watcher () {
 
   wait_for_x
 
-  [ "$debug" -eq 1 ] && echo "daemon: ${targets[@]}"
+  [ "$debug" -eq 1 ] && echo "watcher: ${targets[@]}"
 
   inotifywait -e move,delete,close_write  -r "${targets[@]}"
   sleep "$inotify_event_delay"
 
   main_kill
 
-  main_daemon "$@"
+  main_watcher "$@"
 }
 
 function main_kill () {
