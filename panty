@@ -34,7 +34,7 @@ function pull () {
 function main_stocker () {
   wait_for_x
 
-  local window="$(gvim --echo-wid --role 'STOCKING' | head -n 1 | sed 's/.*: //')"
+  local window="$(gvim --echo-wid --servername 'STOCKING' --role 'STOCKING' | head -n 1 | sed 's/.*: //')"
 
   [ "$debug" -eq 1 ] && echo "spawn: $window"
   echo "$window" > "$queue_file"
@@ -45,6 +45,17 @@ function main_stocker () {
 function main_summon () {
   local window="$(head -n 1 "$queue_file")"
 
+
+  local OPTION
+  while getopts 'r:' OPTION
+  do
+    case "$OPTION" in
+      r) OPT_ROLE="$OPTARG" ;;
+    esac
+  done
+  shift $(($OPTIND - 1))
+
+
   pull "$window"
 
   # Send file names
@@ -54,12 +65,12 @@ function main_summon () {
   then
     # Time
     at_summoned=$(date '+%N')
-    echo -n 'summon: '
+    echo -n "summon: role = $OPT_ROLE, time = "
     expr \( $at_summoned - $at_start \) / 1000 / 1000
   fi
 
   # Stocking becomes panty
-  xdotool set_window --role 'PANTY' "$window"
+  xdotool set_window --role "${OPT_ROLE:-PANTY}" "$window"
 }
 
 function main_watcher () {
@@ -103,7 +114,7 @@ function main () {
   fi
 
   exec 2>&1
-  echo 'Usage: panty summon <GVIM ARGS>....'
+  echo 'Usage: panty summon [-r <ROLE>] <GVIM ARGS>....'
   echo '       panty stocker'
   echo '       panty watcher'
   echo '       panty kill'
