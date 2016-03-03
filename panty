@@ -1,108 +1,65 @@
 #!/bin/bash
 
-##############################################################
-# .-,--.   ,.  ,-,-.  ,--,--'.  .       ,.  ,-,-.   .-,--.   #
-#  '|__/  / |  ` | |  `- |   |  |      / |  ` | |   ' |   \  #
-#  ,|    /~~|-.  | |-. , |   |  |     /~~|-.  | |-. , |   /  #
-#  `'  ,'   `-' ,' `-' `-'   `--|   ,'   `-' ,' `-' `-^--'   #
-#                            .- |                            #
-#                            `--'                            #
-# .---. ,--,--',,--.  ,--. ,-, , ,-_/ ,-,-.   ,---.          #
-# \___  `- |   |`, | | `-'  )|/  '  | ` | |   |  -'          #
-#     \  , |   |   | |   .   |\  .^ |   | |-. |  ,-'         #
-# `---'  `-'   `---' `--'   ,' ` `--'  ,' `-' `---|          #
-#                                              ,-.|          #
-#                                              `-+'          #
-##############################################################
-
-next_role_number=1
-max_stockings=2
 inotify_event_delay=0.3
+debug=1
 
-queue_file=/tmp/panty-queue
+queue_file=/tmp/xmosh/panty-queue
 at_start=$(date '+%N')
 
 
-function new_role () {
-  next_role_number=$(( next_role_number + 1))
-}
-
-function get_role () {
-  local wid="$1"
-  xprop -id "$wid" -f WM_WINDOW_ROLE 8s WM_WINDOW_ROLE | sed 's/[^"]*"//' | sed 's/"$//' | grep -v 'not found'
-}
-
-function get_gvims () {
-  xdotool search --class 'gvim'
-}
-
-# print "$window $role"
-function get_stockings () {
-  xdotool search --class 'gvim' | while read window
-  do
-    local role="$(get_role "$window")"
-    [[ $role =~ ^STOCKING-[0-9]+$ ]] && echo "$window:$role"
-  done
-}
-
-function initialize () {
-  echo 'initialize'
-
-  # set next_role_number
-  local current_stockings=0
-
-  for found in `get_stockings`
-  do
-    local role="${found#*:}"
-    local number=${role#*-}
-    local current_stockings=$(( current_stockings + 1 ))
-    [[ $number -ge $next_role_number ]] && next_role_number=$(( number + 1 ))
-  done
-
-  for nop in `seq $(( max_stockings - current_stockings ))`
-  do
-    spawn
-  done
-}
-
-function find_stocking () {
-  get_stockings | head -n 1
-}
-
-function spawn () {
-  local name="STOCKING-$next_role_number"
-
-  echo "spawn: $name"
-  gvim --role "$name" --servername "$name" --echo-wid | read window
-  echo xdotool windowunmap "${window# *: }"
-
-  next_role_number=$(( next_role_number + 1 ))
-}
-
-function kill_em_all () {
-  for found in `get_stockings`
-  do
-    local window="${found%:*}"
-    xdotool windowkill "$window"
-  done
-}
-
-function main_initialize () {
-  initialize
-}
-
-function main_restart () {
-  kill_em_all
-  initialize
-}
-
 function wait_for_x () {
-  echo 'wait_for_x'
+  [ "$debug" -eq 1 ] && echo 'wait_for_x'
+
   while true
   do
     sleep 1
     &>1 xprop -root > /dev/null && return
   done
+}
+
+
+function initialize_queue_file () {
+  [ -e "$queue_file" ] || mkfifo "$queue_file"
+}
+
+function pull () {
+  local window="$1"
+
+  # xc pull "$window"
+
+  local desktop="$(xdotool get_desktop)"
+  xdotool set_desktop_for_window "$window" "$desktop"
+}
+
+function main_stocker () {
+  wait_for_x
+
+  local window="$(gvim --echo-wid --role 'STOCKING' | head -n 1 | sed 's/.*: //')"
+
+  [ "$debug" -eq 1 ] && echo "spawn: $window"
+  echo "$window" > "$queue_file"
+
+  main_stocker
+}
+
+function main_summon () {
+  local window="$(head -n 1 "$queue_file")"
+
+  pull "$window"
+
+  # Send file names
+  [ "$#" -gt 0 ] && gvim --servername 'STOCKING' --remote "$@"
+
+  if [ "$debug" -eq 1 ]
+  then
+    # Time
+    at_summoned=$(date '+%N')
+    echo -n 'summon: '
+    expr \( $at_summoned - $at_start \) / 1000 / 1000
+  fi
+
+  # Stocking becomes panty
+  xdotool set_window --role 'PANTY' "$window"
 }
 
 function main_daemon () {
@@ -115,57 +72,29 @@ function main_daemon () {
 
   wait_for_x
 
-  initialize
+  [ "$debug" -eq 1 ] && echo "daemon: ${targets[@]}"
 
-  echo "daemon: ${targets[@]}"
   inotifywait -e move,delete,close_write  -r "${targets[@]}"
   sleep "$inotify_event_delay"
 
-  main_restart
+  main_kill
 
   main_daemon "$@"
 }
 
-function main_list () {
-  get_stockings
+function main_kill () {
+  while read window
+  do
+    xdotool windowkill "$window"
+  done < "$queue_file"
 }
 
-function main_summon () {
-  local found="$(find_stocking)"
-  local desktop="$(xdotool get_desktop)"
-
-  if [ -z "$found" ]
-  then
-    echo 'Stocking Not Found' 1>&2
-    initialize
-    local found="$(find_stocking)"
-  fi
-
-  [ -z "$found" ] && exit 1
-
-  local window="${found%:*}"
-  local role="${found#*:}"
-
-  echo "summon: $found"
-
-  # Move a stockin to current workspace
-  xdotool set_desktop_for_window "$window" "$desktop"
-
-  # Send file names
-  [ "$#" -gt 0 ] && gvim --servername "$role" --remote "$@"
-
-  # Stocking becomes panty
-  xdotool set_window --role 'PANTY' "$window"
-
-  at_summoned=$(date '+%N')
-  expr \( $at_summoned - $at_start \) / 1000 / 1000
-
-  initialize
-}
 
 function main () {
   local sub="$1"
   shift
+
+  initialize_queue_file
 
   if [ -n "$sub" ] && type "main_$sub" &> /dev/null
   then
@@ -176,20 +105,9 @@ function main () {
   exec 2>&1
   echo 'Usage: panty summon <GVIM ARGS>....'
   echo '       panty initialize'
-  echo '       panty restart'
+  echo '       panty kill'
   echo '       panty list'
   exit 1
 }
 
 main "$@"
-
-
-# The MIT License (MIT)
-#
-# Copyright (c) anekos <panty-of-anekos@snca.net>
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
