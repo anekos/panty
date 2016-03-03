@@ -16,8 +16,11 @@
 ##############################################################
 
 next_role_number=1
-max_stockings=10
+max_stockings=2
 inotify_event_delay=0.3
+
+queue_file=/tmp/panty-queue
+at_start=$(date '+%N')
 
 
 function new_role () {
@@ -153,6 +156,9 @@ function main_summon () {
 
   # Stocking becomes panty
   xdotool set_window --role 'PANTY' "$window"
+
+  at_summoned=$(date '+%N')
+  expr \( $at_summoned - $at_start \) / 1000 / 1000
 
   initialize
 }
