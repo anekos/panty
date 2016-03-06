@@ -17,7 +17,6 @@
 
 
 inotify_event_delay=0.3
-log_file=/tmp/panty.log
 debug=1
 
 queue_file=/tmp/xmosh/panty-queue
@@ -147,6 +146,8 @@ function main_kill () {
 }
 
 function main_init () {
+  local log_file="${1:-/dev/null}"
+
   main_kill
   setsid panty stocker >> "$log_file" 2>&1 &
   setsid panty watcher >> "$log_file" 2>&1 &
@@ -170,7 +171,7 @@ function main () {
   echo '       panty stocker'
   echo '       panty watcher'
   echo '       panty kill'
-  echo '       panty init'
+  echo '       panty init [<LOGFILE>]'
   exit 1
 }
 
