@@ -1,11 +1,44 @@
 #!/bin/bash
 
+##############################################################
+# .-,--.   ,.  ,-,-.  ,--,--'.  .       ,.  ,-,-.   .-,--.   #
+#  '|__/  / |  ` | |  `- |   |  |      / |  ` | |   ' |   \  #
+#  ,|    /~~|-.  | |-. , |   |  |     /~~|-.  | |-. , |   /  #
+#  `'  ,'   `-' ,' `-' `-'   `--|   ,'   `-' ,' `-' `-^--'   #
+#                            .- |                            #
+#                            `--'                            #
+# .---. ,--,--',,--.  ,--. ,-, , ,-_/ ,-,-.   ,---.          #
+# \___  `- |   |`, | | `-'  )|/  '  | ` | |   |  -'          #
+#     \  , |   |   | |   .   |\  .^ |   | |-. |  ,-'         #
+# `---'  `-'   `---' `--'   ,' ` `--'  ,' `-' `---|          #
+#                                              ,-.|          #
+#                                              `-+'          #
+##############################################################
+
+
 inotify_event_delay=0.3
+log_file=/tmp/panty.log
 debug=1
 
 queue_file=/tmp/xmosh/panty-queue
 at_start=$(date '+%N')
 
+
+function die () {
+  echo "$1" 2>&1
+  exit 1
+}
+
+function get_role () {
+  local window="$1"
+  xprop -id "$window" -f WM_WINDOW_ROLE 8s WM_WINDOW_ROLE | sed 's/[^"]*"//' | sed 's/"$//' | grep -v 'not found'
+}
+
+function is_stocking () {
+  local window="$1"
+  local role="$(get_role "$window")"
+  [ "$role" = 'STOCKING' ]
+}
 
 function wait_for_x () {
   [ "$debug" -eq 1 ] && echo 'wait_for_x'
@@ -17,9 +50,13 @@ function wait_for_x () {
   done
 }
 
-
 function initialize_queue_file () {
-  [ -e "$queue_file" ] || mkfifo "$queue_file"
+  if [ ! -e "$queue_file" ]
+  then
+    local dir="$(dirname "$queue_file")"
+    mkdir -p "$dir" || die "Could not create $dir"
+    mkfifo "$queue_file" || die "Could not create $queue_file"
+  fi
 }
 
 function pull () {
@@ -30,6 +67,20 @@ function pull () {
   local desktop="$(xdotool get_desktop)"
   xdotool set_desktop_for_window "$window" "$desktop"
 }
+
+function nude () {
+  local self="$$"
+  local pids=`pgrep --exact "$(basename "$0")"`
+  kill $(echo "$pids" | fgrep --line-regexp -v "$self")
+}
+
+function undress () {
+  xdotool search --class gvim | while read window
+  do
+    is_stocking "$window" && xdotool windowkill "$window"
+  done
+}
+
 
 function main_stocker () {
   wait_for_x
@@ -45,7 +96,6 @@ function main_stocker () {
 function main_summon () {
   local window="$(head -n 1 "$queue_file")"
 
-
   local OPTION
   while getopts 'r:' OPTION
   do
@@ -55,7 +105,6 @@ function main_summon () {
   done
   shift $(($OPTIND - 1))
 
-
   pull "$window"
 
   # Send file names
@@ -63,7 +112,6 @@ function main_summon () {
 
   if [ "$debug" -eq 1 ]
   then
-    # Time
     at_summoned=$(date '+%N')
     echo -n "summon: role = $OPT_ROLE, time = "
     expr \( $at_summoned - $at_start \) / 1000 / 1000
@@ -94,10 +142,14 @@ function main_watcher () {
 }
 
 function main_kill () {
-  while read window
-  do
-    xdotool windowkill "$window"
-  done < "$queue_file"
+  nude
+  undress
+}
+
+function main_init () {
+  main_kill
+  setsid panty stocker >> "$log_file" 2>&1 &
+  setsid panty watcher >> "$log_file" 2>&1 &
 }
 
 
@@ -118,6 +170,7 @@ function main () {
   echo '       panty stocker'
   echo '       panty watcher'
   echo '       panty kill'
+  echo '       panty init'
   exit 1
 }
 
