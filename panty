@@ -104,29 +104,35 @@ function main_summon () {
   local window="${window_and_name%:*}"
   local name="${window_and_name#*:}"
 
+  local remote_cmd='--remote'
+  local new_role='PANTY'
+
+
   local OPTION
-  while getopts 'r:' OPTION
+  while getopts 'wr:' OPTION
   do
     case "$OPTION" in
-      r) OPT_ROLE="$OPTARG" ;;
+      r) local new_role="$OPTARG" ;;
+      w) local remote_cmd='--remote-wait' ;
     esac
   done
   shift $(($OPTIND - 1))
 
+
   pull "$window"
 
   # Send file names
-  [ "$#" -gt 0 ] && gvim --servername "$name" --remote "$@"
+  [ "$#" -gt 0 ] && gvim --servername "$name" "$remote_cmd" "$@"
 
   if [ "$debug" -eq 1 ]
   then
     at_summoned=$(date '+%N')
-    echo -n "summon: role = $OPT_ROLE, time = "
+    echo -n "summon: role = $new_role, time = "
     expr \( $at_summoned - $at_start \) / 1000 / 1000
   fi
 
   # Stocking becomes panty
-  xdotool set_window --role "${OPT_ROLE:-PANTY}" "$window"
+  xdotool set_window --role "$new_role" "$window"
 }
 
 function main_watcher () {
