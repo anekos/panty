@@ -45,7 +45,7 @@ function wait_for_x () {
   while true
   do
     sleep 1
-    &>1 xprop -root > /dev/null && return
+    xprop -root > /dev/null 2>&1 && return
   done
 }
 
@@ -69,8 +69,9 @@ function pull () {
 
 function nude () {
   local self="$$"
-  local pids=`pgrep --exact "$(basename "$0")"`
-  kill $(echo "$pids" | fgrep --line-regexp -v "$self")
+  local pids="$(pgrep --exact "$(basename "$0")")"
+  local target="$(echo "$pids" | fgrep --line-regexp -v "$self")"
+  [ -n "$target" ] && kill $target
 }
 
 function undress () {
@@ -80,20 +81,28 @@ function undress () {
   done
 }
 
+function new_stocking_name () {
+  local lastocking="$(vim --serverlist | grep '^STOCKING-' | sed 's/STOCKING-//' | sort -rn | head -n1)"
+  echo "STOCKING-$(( lastocking + 1 ))"
+}
+
 
 function main_stocker () {
   wait_for_x
 
-  local window="$(gvim --echo-wid --servername 'STOCKING' --role 'STOCKING' | head -n 1 | sed 's/.*: //')"
+  local name="$(new_stocking_name)"
+  local window="$(gvim --echo-wid --servername "$name" --role 'STOCKING' | head -n 1 | sed 's/.*: //')"
 
   [ "$debug" -eq 1 ] && echo "spawn: $window"
-  echo "$window" > "$queue_file"
+  echo "${window}:${name}" > "$queue_file"
 
   main_stocker
 }
 
 function main_summon () {
-  local window="$(head -n 1 "$queue_file")"
+  local window_and_name="$(head -n 1 "$queue_file")"
+  local window="${window_and_name%:*}"
+  local name="${window_and_name#*:}"
 
   local OPTION
   while getopts 'r:' OPTION
@@ -107,7 +116,7 @@ function main_summon () {
   pull "$window"
 
   # Send file names
-  [ "$#" -gt 0 ] && gvim --servername 'STOCKING' --remote "$@"
+  [ "$#" -gt 0 ] && gvim --servername "$name" --remote "$@"
 
   if [ "$debug" -eq 1 ]
   then
@@ -151,6 +160,10 @@ function main_init () {
   main_kill
   setsid panty stocker >> "$log_file" 2>&1 &
   setsid panty watcher >> "$log_file" 2>&1 &
+}
+
+function main_test () {
+  new_stocking_name
 }
 
 
