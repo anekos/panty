@@ -110,7 +110,7 @@ function main_summon () {
   local window="${window_and_name%:*}"
   local name="${window_and_name#*:}"
 
-  local remote_cmd='--remote'
+  local remote_cmd='--remote-tab'
   local new_role='PANTY'
 
 
@@ -119,7 +119,7 @@ function main_summon () {
   do
     case "$OPTION" in
       r) local new_role="$OPTARG" ;;
-      w) local remote_cmd='--remote-wait' ;
+      w) local remote_cmd='--remote-tab-wait' ;
     esac
   done
   shift $(($OPTIND - 1))
