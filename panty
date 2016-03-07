@@ -86,6 +86,12 @@ function new_stocking_name () {
   echo "STOCKING-$(( lastocking + 1 ))"
 }
 
+function log_time () {
+  at_summoned=$(date '+%N')
+  echo -n "summon: role = $new_role, time = "
+  expr \( $at_summoned - $at_start \) / 1000 / 1000
+}
+
 
 function main_stocker () {
   wait_for_x
@@ -124,12 +130,7 @@ function main_summon () {
   # Send file names
   [ "$#" -gt 0 ] && gvim --servername "$name" "$remote_cmd" "$@"
 
-  if [ "$debug" -eq 1 ]
-  then
-    at_summoned=$(date '+%N')
-    echo -n "summon: role = $new_role, time = "
-    expr \( $at_summoned - $at_start \) / 1000 / 1000
-  fi
+  [ "$debug" -eq 1 ] && log_time
 
   # Stocking becomes panty
   xdotool set_window --role "$new_role" "$window"
