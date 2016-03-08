@@ -94,15 +94,16 @@ function log_time () {
 
 
 function main_stocker () {
-  wait_for_x
+  while true
+  do
+    wait_for_x
 
-  local name="$(new_stocking_name)"
-  local window="$(gvim --echo-wid --servername "$name" --role 'STOCKING' | head -n 1 | sed 's/.*: //')"
+    local name="$(new_stocking_name)"
+    local window="$(gvim --echo-wid --servername "$name" --role 'STOCKING' | head -n 1 | sed 's/.*: //')"
 
-  [ "$debug" -eq 1 ] && echo "spawn: $window"
-  echo "${window}:${name}" > "$queue_file"
-
-  main_stocker
+    [ "$debug" -eq 1 ] && echo "spawn: $window"
+    echo "${window}:${name}" > "$queue_file"
+  done
 }
 
 function main_summon () {
@@ -144,16 +145,17 @@ function main_watcher () {
     local targets=("$@")
   fi
 
-  wait_for_x
+  while true
+  do
+    wait_for_x
 
-  [ "$debug" -eq 1 ] && echo "watcher: ${targets[@]}"
+    [ "$debug" -eq 1 ] && echo "watcher: ${targets[@]}"
 
-  inotifywait -e move,delete,close_write  -r "${targets[@]}"
-  sleep "$inotify_event_delay"
+    inotifywait -e move,delete,close_write  -r "${targets[@]}"
+    sleep "$inotify_event_delay"
 
-  main_kill
-
-  main_watcher "$@"
+    main_kill
+  done
 }
 
 function main_kill () {
