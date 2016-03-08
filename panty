@@ -154,7 +154,7 @@ function main_watcher () {
     inotifywait -e move,delete,close_write  -r "${targets[@]}"
     sleep "$inotify_event_delay"
 
-    main_kill
+    undress
   done
 }
 
