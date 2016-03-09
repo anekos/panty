@@ -116,11 +116,12 @@ function main_summon () {
 
 
   local OPTION
-  while getopts 'wr:' OPTION
+  while getopts 'wr:a:' OPTION
   do
     case "$OPTION" in
       r) local new_role="$OPTARG" ;;
-      w) local remote_cmd='--remote-tab-wait' ;
+      w) local remote_cmd='--remote-tab-wait' ;;
+      a) local post_keys="$OPTARG" ;;
     esac
   done
   shift $(($OPTIND - 1))
@@ -130,6 +131,9 @@ function main_summon () {
 
   # Send file names
   [ "$#" -gt 0 ] && gvim --servername "$name" "$remote_cmd" "$@"
+
+  # Post command
+  [ -n "$post_keys" ] && gvim --servername "$name" --remote-send "$post_keys"
 
   [ "$debug" -eq 1 ] && log_time
 
@@ -191,7 +195,7 @@ function main () {
   fi
 
   exec 2>&1
-  echo 'Usage: panty summon [-r <ROLE>] <GVIM ARGS>....'
+  echo 'Usage: panty summon [-r <ROLE>] [-a <SEND_KEYS_AFTER_OPEN>] <GVIM ARGS>....'
   echo '       panty stocker'
   echo '       panty watcher'
   echo '       panty kill'
