@@ -79,6 +79,7 @@ function undress () {
   do
     is_stocking "$window" && xdotool windowkill "$window"
   done
+  cat "$queue_file"
 }
 
 function new_stocking_name () {
