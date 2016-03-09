@@ -152,7 +152,7 @@ function main_watcher () {
 
     [ "$debug" -eq 1 ] && echo "watcher: ${targets[@]}"
 
-    inotifywait -e move,delete,close_write  -r "${targets[@]}"
+    inotifywait -e move,delete,modify -r "${targets[@]}"
     sleep "$inotify_event_delay"
 
     undress
