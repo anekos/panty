@@ -186,7 +186,14 @@ function main_init () {
   local log_file="${1:-/dev/null}"
 
   main_kill
+
   setsid panty stocker >> "$log_file" 2>&1 &
+
+  while [ ! -e "$queue_file" ]
+  do
+    sleep 0.2
+  done
+
   setsid panty watcher >> "$log_file" 2>&1 &
 }
 
