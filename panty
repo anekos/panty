@@ -93,6 +93,22 @@ function log_time () {
   expr \( $at_summoned - $at_start \) / 1000 / 1000
 }
 
+function summon () {
+  local name="$1"
+
+  local line
+
+  gvim --echo-wid --servername "$name" --role 'STOCKING' | while read line
+  do
+    line="$(echo "$line" | sed --unbuffered "s,\x1B\[[0-9;]*[a-zA-Z],,g")"
+    if [[ $line == 'WID: '* ]]
+    then
+      echo "${line#WID: }"
+      return 0
+    fi
+  done
+}
+
 
 function main_stocker () {
   while true
@@ -100,7 +116,7 @@ function main_stocker () {
     wait_for_x
 
     local name="$(new_stocking_name)"
-    local window="$(gvim --echo-wid --servername "$name" --role 'STOCKING' | head -n 1 | sed 's/.*: //')"
+    local window="$(summon "$name")"
 
     # Hide the spawned window
     if [ "$use_unmap" -eq 1 ]
@@ -198,7 +214,8 @@ function main_init () {
 }
 
 function main_test () {
-  new_stocking_name
+  summon aaa
+
 }
 
 
