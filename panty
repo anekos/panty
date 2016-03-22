@@ -19,6 +19,7 @@
 inotify_event_delay=0.3
 debug=1
 use_unmap=0
+use_xc=1
 
 queue_file=/tmp/xmosh/panty-queue
 at_start=$(date '+%N')
@@ -62,10 +63,13 @@ function initialize_queue_file () {
 function pull () {
   local window="$1"
 
-  # xc pull "$window"
-
-  local desktop="$(xdotool get_desktop)"
-  xdotool set_desktop_for_window "$window" "$desktop"
+  if [ "$use_xc" = 1 ]
+  then
+    xc pull "$window"
+  else
+    local desktop="$(xdotool get_desktop)"
+    xdotool set_desktop_for_window "$window" "$desktop"
+  fi
 }
 
 function nude () {
