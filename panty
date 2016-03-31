@@ -148,19 +148,23 @@ function main_summon () {
 
 
   local OPTION
-  while getopts 'wr:a:' OPTION
+  while getopts 'wr:a:b:' OPTION
   do
     case "$OPTION" in
       r) local new_role="$OPTARG" ;;
       w) local remote_cmd='--remote-tab-wait' ;;
+      b) local pre_keys="$OPTARG" ;;
       a) local post_keys="$OPTARG" ;;
     esac
   done
-  shift $(($OPTIND - 1))
+  shift $((OPTIND - 1))
 
 
   [ "$use_unmap" -eq 1 ] && xdotool windowmap "$window"
   pull "$window"
+
+  # Pre command
+  [ -n "$pre_keys" ] && gvim --servername "$name" --remote-send "$pre_keys"
 
   # Send file names
   [ "$#" -gt 0 ] && gvim --servername "$name" "$remote_cmd" "$@"
