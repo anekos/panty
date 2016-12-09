@@ -1,11 +1,17 @@
 
 extern crate x11;
+extern crate unix_socket;
 
 use std::ffi::CString;
 use std::mem::zeroed;
 use std::ptr::{null};
+use std::thread;
+use std::env;
 
 use x11::xlib;
+
+use unix_socket::{UnixStream, UnixListener};
+use std::io::prelude::*;
 
 
 fn set_desktop_for_window(window: xlib::Window, desktop: i64) {
@@ -53,6 +59,35 @@ fn set_desktop_for_window(window: xlib::Window, desktop: i64) {
 }
 
 
+fn handle_client(stream: UnixStream) {
+}
+
+fn server() {
+    let listener = UnixListener::bind("necone").unwrap();
+    for stream in listener.incoming() {
+        match stream {
+            Ok(stream) => {
+                /* connection succeeded */
+                thread::spawn(|| handle_client(stream));
+            }
+            Err(err) => {
+                /* connection failed */ break;
+            }
+        }
+    }
+    drop(listener);
+}
+
 fn main() {
     set_desktop_for_window(39845894, 1);
+
+    match env::args().nth(0).map(|it| it.as_str()) {
+        Some("stocker") => server()
+    }
+
+    //let mut stream = UnixStream::connect("/tmp/xmosh/.necone").unwrap();
+    //stream.write_all(b"hello world").unwrap();
+    //let mut response = String::new();
+    //stream.read_to_string(&mut response).unwrap();
+    //println!("{}", response);
 }
