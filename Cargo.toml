@@ -1,0 +1,8 @@
+[package]
+name = "panty"
+version = "0.1.0"
+authors = ["anekos <anekos@snca.net>"]
+
+[dependencies]
+libc = "*"
+x11 = { version = "*", features = ["xlib", "xinerama"] }
