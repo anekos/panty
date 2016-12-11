@@ -1,7 +1,7 @@
 
 
 test:
-	cargo build
+	cargo build --verbose
 	./target/debug/panty
 
 build:
