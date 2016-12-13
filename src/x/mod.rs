@@ -14,6 +14,23 @@ pub fn unmap_window(window: Window) {
 }
 
 
+pub fn set_window_role(window: Window, role: &str) {
+    unsafe {
+        let display: *mut Display = XOpenDisplay(null());
+
+        XChangeProperty(
+            display,
+            window,
+            intern_atom(display, "WM_WINDOW_ROLE"),
+            intern_atom(display, "STRING"),
+            8,
+            PropModeReplace,
+            role.as_ptr(),
+            role.len() as i32);
+    }
+}
+
+
 pub fn set_desktop_for_window(window: Window, desktop: i64) {
     unsafe {
         let display: *mut Display = XOpenDisplay(null());
