@@ -2,7 +2,7 @@
 
 test:
 	cargo build --verbose
-	./target/debug/panty
+	./scripts/test_run
 
 build:
 	cargo build
