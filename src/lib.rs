@@ -1,6 +1,8 @@
 
 extern crate x11;
 extern crate unix_socket;
+extern crate core;
+
 
 pub mod gvim;
 pub mod collector;

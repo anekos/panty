@@ -3,9 +3,14 @@ use std::io::prelude::Read;
 use unix_socket::{UnixListener};
 use std::thread;
 use std::sync::mpsc::{Sender, channel};
+use std::collections::LinkedList;
+use x11::xlib::Window;
 
 use gvim;
 use x;
+
+
+const MAX_STOCKS: usize = 1;
 
 
 enum Message {
@@ -14,14 +19,24 @@ enum Message {
 
 
 pub fn start() {
+    let mut current_gvims: LinkedList<Window> = LinkedList::new();
+
     let (tx, rx) = channel();
     thread::spawn(|| listener(tx));
+
+    fill(&mut current_gvims);
 
     loop {
         use self::Message::*;
 
         match rx.recv() {
-            Ok(Summon(_)) => display_gvim(),
+            Ok(Summon(_)) => {
+                match current_gvims.pop_front() {
+                    Some(win) => display_gvim(win),
+                    None => {}
+                }
+                fill(&mut current_gvims);
+            },
             Err(err) => println!("Error: {}", err)
         }
     }
@@ -52,9 +67,15 @@ fn listener(tx: Sender<Message>) {
 }
 
 
-fn display_gvim() {
+fn fill(current_gvims: &mut LinkedList<Window>) {
+    for _ in current_gvims.len() .. MAX_STOCKS {
+        current_gvims.push_back(gvim::spawn())
+    }
+}
+
+
+fn display_gvim(window: Window) {
     let desktop = x::get_current_desktop() as i64;
-    println!("desktop is {}", desktop);
-    x::set_desktop_for_window(39845894, desktop);
+    x::set_desktop_for_window(window, desktop);
     gvim::spawn();
 }
