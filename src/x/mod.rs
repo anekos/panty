@@ -2,33 +2,30 @@
 use std::ptr::null;
 use std::ffi::CString;
 use std::mem::zeroed;
-use x11::xlib;
+use x11::xlib::*;
 
 
 
-pub fn set_desktop_for_window(window: xlib::Window, desktop: i64) {
+pub fn set_desktop_for_window(window: Window, desktop: i64) {
     unsafe {
-        let display = xlib::XOpenDisplay(null());
+        let display: *mut Display = XOpenDisplay(null());
 
-        let mut wattr: xlib::XWindowAttributes = zeroed();
-        xlib::XGetWindowAttributes(display, window, &mut wattr);
+        let mut wattr: XWindowAttributes = zeroed();
+        XGetWindowAttributes(display, window, &mut wattr);
 
-        let wm_desktop = {
-            let wm_desktop_str = CString::new("_NET_WM_DESKTOP").unwrap();
-            xlib::XInternAtom(display, wm_desktop_str.as_ptr(), xlib::False)
-        };
+        let wm_desktop = intern_atom(display, "_NET_WM_DESKTOP");
 
-        let root = xlib::XRootWindowOfScreen(wattr.screen);
+        let root = XRootWindowOfScreen(wattr.screen);
 
         let data = {
-            let mut data = xlib::ClientMessageData::new();
+            let mut data = ClientMessageData::new();
             data.set_long(0, desktop);
             data.set_long(1, 2);
             data
         };
 
-        let ev = xlib::XClientMessageEvent {
-            type_: xlib::ClientMessage,
+        let ev = XClientMessageEvent {
+            type_: ClientMessage,
             serial: 0,
             send_event: 0,
             display: display,
@@ -38,14 +35,57 @@ pub fn set_desktop_for_window(window: xlib::Window, desktop: i64) {
             data: data
         };
 
-        xlib::XSendEvent(
+        XSendEvent(
             display,
             root,
-            xlib::False,
-            xlib::SubstructureNotifyMask | xlib::SubstructureRedirectMask,
-            &mut xlib::XEvent::from(ev));
+            False,
+            SubstructureNotifyMask | SubstructureRedirectMask,
+            &mut XEvent::from(ev));
 
-        xlib::XFlush(display);
-        xlib::XCloseDisplay(display);
+        XFlush(display);
+        XCloseDisplay(display);
+    }
+}
+
+
+pub fn get_current_desktop() ->  i64 {
+    unsafe {
+        let display = XOpenDisplay(null());
+        let root = XDefaultRootWindow(display);
+
+        let mut actual_type: u64 = 0;
+        let mut actual_format: i32 = 0;
+        let mut n_items: u64 = 0;
+        let mut bytes_after: u64 = 0;
+        let mut prop: *mut u8 = zeroed();
+
+        let current_desktop: u64 = intern_atom(display, "_NET_CURRENT_DESKTOP");
+        XGetWindowProperty(
+            display,
+            root,
+            current_desktop,
+            0,
+            !0,
+            False,
+            AnyPropertyType as u64,
+            &mut actual_type,
+            &mut actual_format,
+            &mut n_items,
+            &mut bytes_after,
+            &mut prop);
+
+        if n_items > 0 {
+            *(prop as *mut i64)
+        } else {
+            panic!("Fail: _NET_CURRENT_DESKTOP")
+        }
+    }
+}
+
+
+fn intern_atom(display: *mut Display, name: &str) -> u64 {
+    unsafe {
+        let cstr = CString::new(name).unwrap();
+        XInternAtom(display, cstr.as_ptr(), False)
     }
 }
