@@ -69,7 +69,10 @@ fn listener(tx: Sender<Message>) {
 
 fn fill(current_gvims: &mut LinkedList<Window>) {
     for _ in current_gvims.len() .. MAX_STOCKS {
-        current_gvims.push_back(gvim::spawn())
+        let wid = gvim::spawn();
+        thread::sleep_ms(100);
+        x::unmap_window(wid);
+        current_gvims.push_back(wid);
     }
 }
 

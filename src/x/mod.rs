@@ -5,6 +5,14 @@ use std::mem::zeroed;
 use x11::xlib::*;
 
 
+pub fn unmap_window(window: Window) {
+    unsafe {
+        let display: *mut Display = XOpenDisplay(null());
+        let res = XUnmapWindow(display, window);
+        XFlush(display);
+    }
+}
+
 
 pub fn set_desktop_for_window(window: Window, desktop: i64) {
     unsafe {

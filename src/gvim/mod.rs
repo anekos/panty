@@ -11,6 +11,7 @@ pub fn spawn() -> Window {
     let mut child = Command::new("gvim")
         .arg("--nofork")
         .arg("--echo-wid")
+        .arg("--role=STOCKING")
         .stdout(Stdio::piped())
         .spawn()
         .expect("Failed to execute process");
