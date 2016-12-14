@@ -33,5 +33,6 @@ pub fn summon(servername: String, window: Window, param: Parameter) {
     x::map_window(window);
     x::set_desktop_for_window(window, desktop);
 
+    param.role.map(|role| x::set_window_role(window, role.as_str()));
     gvim::send_files(&servername, param.files);
 }
