@@ -1,7 +1,6 @@
 
 mod display;
 
-use std::ptr::null;
 use std::ffi::CString;
 use std::mem::zeroed;
 use std::os::raw::c_void;
@@ -14,7 +13,7 @@ use self::display::*;
 
 pub fn window_exists(window: Window) -> bool {
     unsafe {
-        let display = XOpenDisplay(null());
+        let display = **DISPLAY;
 
         let mut dummy: Window = zeroed();
         let mut p_children: *mut Window = zeroed();
@@ -30,7 +29,6 @@ pub fn window_exists(window: Window) -> bool {
         let children = slice::from_raw_parts(p_children as *const Window, n_children as usize);
 
         XFree(p_children as *mut c_void);
-        XCloseDisplay(display);
 
         for child in children {
             if *child == window {
@@ -47,7 +45,7 @@ pub fn is_window_visible(window: Window) -> bool {
         let display: *mut Display = **DISPLAY;
         let mut wattr: XWindowAttributes = zeroed();
         XGetWindowAttributes(display, window, &mut wattr);
-        wattr.map_state != IsViewable
+        wattr.map_state == IsViewable
     }
 }
 
@@ -124,7 +122,6 @@ pub fn set_desktop_for_window(window: Window, desktop: i64) {
             &mut XEvent::from(ev));
 
         XFlush(display);
-        XCloseDisplay(display);
     }
 }
 
