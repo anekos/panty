@@ -16,10 +16,10 @@ pub fn spawn() -> Window {
         .arg("--nofork")
         .arg("--echo-wid")
         .arg("--role=STOCKING")
+        .arg("-iconic")
         .stdout(Stdio::piped())
         .spawn()
         .expect("Failed to execute process");
-
 
     let mut echoed = String::new();
     BufReader::new(child.stdout.unwrap()).read_line(&mut echoed).unwrap();
@@ -39,7 +39,19 @@ pub fn spawn_in_secret() -> Window {
         thread::sleep(Duration::from_millis(1));
     }
 
-    x::unmap_window(wid);
+    {
+        let max_tries = 50;
+        let mut tried = 0;
+
+        while !x::is_window_visible(wid) && tried < max_tries {
+            tried += 1;
+            thread::sleep(Duration::from_millis(1));
+        }
+
+        if tried < max_tries {
+            x::unmap_window(wid);
+        }
+    }
 
     println!("spawn_in_secret: unmapped");
 
