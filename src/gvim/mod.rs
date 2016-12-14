@@ -12,7 +12,7 @@ use x11::xlib::Window;
 use x;
 
 
-pub fn send_files(servername: &String, files: Vec<&str>) {
+pub fn send_files(servername: &String, files: Vec<String>) {
     if files.is_empty() {
         return
     }

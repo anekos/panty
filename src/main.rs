@@ -2,7 +2,7 @@
 extern crate panty;
 extern crate argparse;
 
-use argparse::{ArgumentParser, Store, List};
+use argparse::{ArgumentParser, Store, StoreOption, List};
 use std::io::{stdout, stderr};
 use std::str::FromStr;
 
@@ -30,20 +30,20 @@ impl FromStr for Command {
 
 
 fn command_summon(args: Vec<String>) {
-    // let mut role = "".to_string();
+    let mut role = None;
     let mut command_args: Vec<String> = vec![];
 
     {
         let mut ap = ArgumentParser::new();
 
         ap.set_description("Plays a sound");
-        // ap.refer(&mut role).add_option(&["--role"], Store, r#"Output sink to play to"#);
+        ap.refer(&mut role).add_option(&["--role"], StoreOption, r#"Output sink to play to"#);
         ap.refer(&mut command_args).add_argument("arguments", List, r#"Arguments for command"#);
 
         ap.parse(args, &mut stdout(), &mut stderr()).map_err(|x| std::process::exit(x)).unwrap();
     }
 
-    summoner::summon(command_args);
+    summoner::cast(summoner::Parameter {files: command_args, role: role});
 }
 
 

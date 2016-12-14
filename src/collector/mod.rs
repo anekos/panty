@@ -1,15 +1,16 @@
 
-use std::fs::remove_file;
-use std::path::Path;
-use std::io::prelude::Read;
-use unix_socket::{UnixListener};
-use std::thread;
-use std::sync::mpsc::{Sender, channel};
+use rustc_serialize::json;
 use std::collections::LinkedList;
+use std::fs::remove_file;
+use std::io::prelude::Read;
+use std::path::Path;
+use std::sync::mpsc::{Sender, channel};
+use std::thread;
+use unix_socket::{UnixListener};
 use x11::xlib::Window;
 
 use gvim;
-use x;
+use summoner;
 
 
 const MAX_STOCKS: usize = 1;
@@ -40,10 +41,10 @@ pub fn start() {
 
         match rx.recv() {
             Ok(Summon(message)) => {
-                let files: Vec<&str> = message.lines().collect();
+                let param: summoner::Parameter = json::decode(message.as_str()).expect("Fail: json::decode");
 
                 match current_gvims.pop_front() {
-                    Some(stock) => display_gvim(stock, files),
+                    Some(stock) => summoner::summon(stock.servername, stock.window, param),
                     None => {}
                 }
 
@@ -91,17 +92,4 @@ fn fill(current_gvims: &mut LinkedList<Stock>) {
             current_gvims.push_back(Stock {window: gvim::spawn_in_secret(&servername), servername: servername});
         }
     }
-}
-
-
-fn display_gvim(stock: Stock, files: Vec<&str>) {
-    let desktop = x::get_current_desktop() as i64;
-
-    println!("display_gvim: window = {}, desktop = {}, servername = {}", stock.window, desktop, stock.servername);
-
-    x::set_window_role(stock.window, &"PANTY");
-    x::map_window(stock.window);
-    x::set_desktop_for_window(stock.window, desktop);
-
-    gvim::send_files(&stock.servername, files);
 }
