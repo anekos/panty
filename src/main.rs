@@ -36,9 +36,10 @@ fn command_summon(args: Vec<String>) {
     {
         let mut ap = ArgumentParser::new();
 
-        ap.set_description("Plays a sound");
-        ap.refer(&mut role).add_option(&["--role"], StoreOption, r#"Output sink to play to"#);
-        ap.refer(&mut command_args).add_argument("arguments", List, r#"Arguments for command"#);
+        ap.set_description("Summon gVim window");
+
+        ap.refer(&mut role).add_option(&["--role"], StoreOption, "Set window role");
+        ap.refer(&mut command_args).add_argument("arguments", List, "Files");
 
         ap.parse(args, &mut stdout(), &mut stderr()).map_err(|x| std::process::exit(x)).unwrap();
     }
@@ -58,9 +59,12 @@ fn main() {
 
     {
         let mut ap = ArgumentParser::new();
-        ap.set_description("Plays or records sound");
+
+        ap.set_description("panty and stocking");
+
         ap.refer(&mut command).required().add_argument("command", Store, "summon/collector");
         ap.refer(&mut args).add_argument("arguments", List, r#"Arguments for command"#);
+
         ap.stop_on_first_argument(true);
         ap.parse_args_or_exit();
     }
