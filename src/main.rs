@@ -3,6 +3,7 @@ extern crate panty;
 extern crate argparse;
 
 use argparse::{ArgumentParser, Store, StoreOption, List};
+use std::env::home_dir;
 use std::io::{stdout, stderr};
 use std::str::FromStr;
 
@@ -58,7 +59,11 @@ fn command_collector(socket_filepath: String) {
 fn main() {
     let mut command = Command::summon;
     let mut args = vec!();
-    let mut socket_filepath = "stockings".to_string();
+    let mut socket_filepath: String = {
+        let mut buf = home_dir().unwrap();
+        buf.push(".stockings");
+        buf.to_str().unwrap().to_string()
+    };
 
     {
         let mut ap = ArgumentParser::new();
