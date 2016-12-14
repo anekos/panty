@@ -17,8 +17,8 @@ pub struct Parameter {
 }
 
 
-pub fn cast(param: Parameter) {
-    let mut stream = UnixStream::connect("stockings").unwrap();
+pub fn cast(socket_filepath: String, param: Parameter) {
+    let mut stream = UnixStream::connect(socket_filepath).unwrap();
 
     stream.write_all(json::encode(&param).expect("Fail: json::encode").as_bytes()).unwrap();
 }

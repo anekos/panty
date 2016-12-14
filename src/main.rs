@@ -29,7 +29,7 @@ impl FromStr for Command {
 }
 
 
-fn command_summon(args: Vec<String>) {
+fn command_summon(socket_filepath: String, args: Vec<String>) {
     let mut role = None;
     let mut command_args: Vec<String> = vec![];
 
@@ -44,23 +44,28 @@ fn command_summon(args: Vec<String>) {
         ap.parse(args, &mut stdout(), &mut stderr()).map_err(|x| std::process::exit(x)).unwrap();
     }
 
-    summoner::cast(summoner::Parameter {files: command_args, role: role});
+    summoner::cast(
+        socket_filepath,
+        summoner::Parameter {files: command_args, role: role});
 }
 
 
-fn command_collector() {
-    collector::start();
+fn command_collector(socket_filepath: String) {
+    collector::start(socket_filepath);
 }
 
 
 fn main() {
     let mut command = Command::summon;
     let mut args = vec!();
+    let mut socket_filepath = "stockings".to_string();
 
     {
         let mut ap = ArgumentParser::new();
 
         ap.set_description("panty and stocking");
+
+        ap.refer(&mut socket_filepath).add_option(&["--socket"], Store, "Socket file path");
 
         ap.refer(&mut command).required().add_argument("command", Store, "summon/collector");
         ap.refer(&mut args).add_argument("arguments", List, r#"Arguments for command"#);
@@ -70,8 +75,9 @@ fn main() {
     }
 
     args.insert(0, format!("command {:?}", command));
+
     match command {
-        Command::summon => command_summon(args),
-        Command::collector => command_collector(),
+        Command::summon => command_summon(socket_filepath, args),
+        Command::collector => command_collector(socket_filepath)
     }
 }

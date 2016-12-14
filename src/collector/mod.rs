@@ -14,7 +14,6 @@ use summoner;
 
 
 const MAX_STOCKS: usize = 1;
-const SOCK_FILENAME: &'static str = "stockings";
 
 
 enum Message {
@@ -28,11 +27,11 @@ struct Stock {
 }
 
 
-pub fn start() {
+pub fn start(socket_filepath: String) {
     let mut current_gvims: LinkedList<Stock> = LinkedList::new();
 
     let (tx, rx) = channel();
-    thread::spawn(|| listener(tx));
+    thread::spawn(|| listener(socket_filepath, tx));
 
     fill(&mut current_gvims);
 
@@ -56,12 +55,12 @@ pub fn start() {
 }
 
 
-fn listener(tx: Sender<Message>) {
-    if Path::new(SOCK_FILENAME).exists() {
-        remove_file(SOCK_FILENAME).expect("Faild: remove socket");
+fn listener(socket_filepath: String, tx: Sender<Message>) {
+    if Path::new(&socket_filepath).exists() {
+        remove_file(&socket_filepath).expect("Faild: remove socket");
     }
 
-    let listener = UnixListener::bind(SOCK_FILENAME).unwrap();
+    let listener = UnixListener::bind(socket_filepath).unwrap();
 
     for stream in listener.incoming() {
         match stream {
