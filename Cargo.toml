@@ -7,3 +7,4 @@ authors = ["anekos <anekos@snca.net>"]
 libc = "*"
 x11 = { version = "*", features = ["xlib", "xinerama"] }
 unix_socket = "*"
+lazy_static = "*"

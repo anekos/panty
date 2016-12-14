@@ -33,11 +33,15 @@ pub fn spawn() -> Window {
 pub fn spawn_in_secret() -> Window {
     let wid = spawn();
 
+    println!("spawn_in_secret: {}", wid);
+
     while !x::window_exists(wid) {
         thread::sleep(Duration::from_millis(1));
     }
 
     x::unmap_window(wid);
+
+    println!("spawn_in_secret: unmapped");
 
     wid
 }

@@ -76,6 +76,10 @@ fn fill(current_gvims: &mut LinkedList<Window>) {
 
 fn display_gvim(window: Window) {
     let desktop = x::get_current_desktop() as i64;
+
+    println!("display_gvim: window = {}, desktop = {}", window, desktop);
+
     x::set_window_role(window, &"PANTY");
+    x::map_window(window);
     x::set_desktop_for_window(window, desktop);
 }
