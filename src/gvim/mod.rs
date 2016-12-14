@@ -13,6 +13,10 @@ use x;
 
 
 pub fn send_files(servername: &String, files: Vec<&str>) {
+    if files.is_empty() {
+        return
+    }
+
     Command::new("gvim")
         .arg("--servername")
         .arg(servername)
