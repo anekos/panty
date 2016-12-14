@@ -2,13 +2,54 @@
 use std::ptr::null;
 use std::ffi::CString;
 use std::mem::zeroed;
+use std::slice;
 use x11::xlib::*;
+
+
+pub fn window_exists(window: Window) -> bool {
+    unsafe {
+        let mut dummy: Window = zeroed();
+        let mut p_children: *mut Window = zeroed();
+        let mut n_children: u32 = 0;
+        let display: *mut Display = XOpenDisplay(null());
+        let root = XDefaultRootWindow(display);
+
+        XQueryTree(display, root, &mut dummy, &mut dummy, &mut p_children, &mut n_children);
+
+        XCloseDisplay(display);
+
+        if n_children <= 0 {
+            return false
+        }
+
+         let children = slice::from_raw_parts(p_children as *const Window, n_children as usize);
+
+        for child in children {
+            if *child == window {
+                return true
+            }
+        }
+
+        false
+    }
+}
+
+pub fn is_window_visible(window: Window) -> bool {
+    unsafe {
+        println!("is_window_visible: begin");
+        let display: *mut Display = XOpenDisplay(null());
+        let mut wattr: XWindowAttributes = zeroed();
+        XGetWindowAttributes(display, window, &mut wattr);
+        println!("is_window_visible: end");
+        wattr.map_state != IsViewable
+    }
+}
 
 
 pub fn unmap_window(window: Window) {
     unsafe {
         let display: *mut Display = XOpenDisplay(null());
-        let res = XUnmapWindow(display, window);
+        XUnmapWindow(display, window);
         XFlush(display);
     }
 }

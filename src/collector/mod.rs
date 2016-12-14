@@ -69,10 +69,7 @@ fn listener(tx: Sender<Message>) {
 
 fn fill(current_gvims: &mut LinkedList<Window>) {
     for _ in current_gvims.len() .. MAX_STOCKS {
-        let wid = gvim::spawn();
-        thread::sleep_ms(100);
-        //x::unmap_window(wid);
-        current_gvims.push_back(wid);
+        current_gvims.push_back(gvim::spawn_in_secret());
     }
 }
 
@@ -80,6 +77,5 @@ fn fill(current_gvims: &mut LinkedList<Window>) {
 fn display_gvim(window: Window) {
     let desktop = x::get_current_desktop() as i64;
     x::set_window_role(window, &"PANTY");
-    println!("window: {}, desktop: {}", window, desktop);
     x::set_desktop_for_window(window, desktop);
 }
