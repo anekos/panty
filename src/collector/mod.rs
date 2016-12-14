@@ -21,8 +21,14 @@ enum Message {
 }
 
 
+struct Stock {
+    window: Window,
+    servername: String
+}
+
+
 pub fn start() {
-    let mut current_gvims: LinkedList<Window> = LinkedList::new();
+    let mut current_gvims: LinkedList<Stock> = LinkedList::new();
 
     let (tx, rx) = channel();
     thread::spawn(|| listener(tx));
@@ -33,11 +39,14 @@ pub fn start() {
         use self::Message::*;
 
         match rx.recv() {
-            Ok(Summon(_)) => {
+            Ok(Summon(message)) => {
+                let files: Vec<&str> = message.lines().collect();
+
                 match current_gvims.pop_front() {
-                    Some(win) => display_gvim(win),
+                    Some(stock) => display_gvim(stock, files),
                     None => {}
                 }
+
                 fill(&mut current_gvims);
             },
             Err(err) => println!("Error: {}", err)
@@ -74,19 +83,25 @@ fn listener(tx: Sender<Message>) {
 }
 
 
-fn fill(current_gvims: &mut LinkedList<Window>) {
-    for _ in current_gvims.len() .. MAX_STOCKS {
-        current_gvims.push_back(gvim::spawn_in_secret());
+fn fill(current_gvims: &mut LinkedList<Stock>) {
+    let n = MAX_STOCKS - current_gvims.len();
+    if n > 0 {
+        let names = gvim::new_servernames(n);
+        for servername in names {
+            current_gvims.push_back(Stock {window: gvim::spawn_in_secret(&servername), servername: servername});
+        }
     }
 }
 
 
-fn display_gvim(window: Window) {
+fn display_gvim(stock: Stock, files: Vec<&str>) {
     let desktop = x::get_current_desktop() as i64;
 
-    println!("display_gvim: window = {}, desktop = {}", window, desktop);
+    println!("display_gvim: window = {}, desktop = {}, servername = {}", stock.window, desktop, stock.servername);
 
-    x::set_window_role(window, &"PANTY");
-    x::map_window(window);
-    x::set_desktop_for_window(window, desktop);
+    x::set_window_role(stock.window, &"PANTY");
+    x::map_window(stock.window);
+    x::set_desktop_for_window(stock.window, desktop);
+
+    gvim::send_files(&stock.servername, files);
 }
