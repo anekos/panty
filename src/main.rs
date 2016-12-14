@@ -51,8 +51,20 @@ fn command_summon(socket_filepath: String, args: Vec<String>) {
 }
 
 
-fn command_collector(socket_filepath: String) {
-    collector::start(socket_filepath);
+fn command_collector(socket_filepath: String, args: Vec<String>) {
+    let mut max_stocks = 1;
+
+    {
+        let mut ap = ArgumentParser::new();
+
+        ap.set_description("Summon gVim window");
+
+        ap.refer(&mut max_stocks).add_option(&["--stocks"], Store, "Max gvim stocks");
+
+        ap.parse(args, &mut stdout(), &mut stderr()).map_err(|x| std::process::exit(x)).unwrap();
+    }
+
+    collector::start(max_stocks, socket_filepath);
 }
 
 
@@ -83,6 +95,6 @@ fn main() {
 
     match command {
         Command::summon => command_summon(socket_filepath, args),
-        Command::collector => command_collector(socket_filepath)
+        Command::collector => command_collector(socket_filepath, args)
     }
 }

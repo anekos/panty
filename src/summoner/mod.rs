@@ -27,7 +27,7 @@ pub fn cast(socket_filepath: String, param: Parameter) {
 pub fn summon(servername: String, window: Window, param: Parameter) {
     let desktop = x::get_current_desktop() as i64;
 
-    println!("display_gvim: window = {}, desktop = {}, servername = {}", window, desktop, servername);
+    println!("summon: window = {}, desktop = {}, servername = {}", window, desktop, servername);
 
     x::set_window_role(window, &"PANTY");
     x::map_window(window);

@@ -9,5 +9,5 @@ then
   rm RUNNING_PID
 fi
 
-./target/debug/panty collector &
+./target/debug/panty collector --stocks 3 &
 echo "$!" >> RUNNING_PID
