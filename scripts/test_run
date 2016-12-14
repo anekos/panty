@@ -9,7 +9,5 @@ then
   rm RUNNING_PID
 fi
 
-[ -e stockings ] && rm stockings
-
 ./target/debug/panty collector &
 echo "$!" >> RUNNING_PID

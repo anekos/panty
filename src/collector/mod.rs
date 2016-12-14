@@ -1,4 +1,6 @@
 
+use std::fs::remove_file;
+use std::path::Path;
 use std::io::prelude::Read;
 use unix_socket::{UnixListener};
 use std::thread;
@@ -11,6 +13,7 @@ use x;
 
 
 const MAX_STOCKS: usize = 1;
+const SOCK_FILENAME: &'static str = "stockings";
 
 
 enum Message {
@@ -44,7 +47,11 @@ pub fn start() {
 
 
 fn listener(tx: Sender<Message>) {
-    let listener = UnixListener::bind("stockings").unwrap();
+    if Path::new(SOCK_FILENAME).exists() {
+        remove_file(SOCK_FILENAME).expect("Faild: remove socket");
+    }
+
+    let listener = UnixListener::bind(SOCK_FILENAME).unwrap();
 
     for stream in listener.incoming() {
         match stream {
