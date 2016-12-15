@@ -11,19 +11,18 @@ use panty::*;
 
 
 
-#[allow(non_camel_case_types)]
 #[derive(Debug)]
 enum Command {
-    summon,
-    collector,
+    Summon,
+    Collector,
 }
 
 impl FromStr for Command {
     type Err = ();
     fn from_str(src: &str) -> Result<Command, ()> {
         return match src {
-            "summon" => Ok(Command::summon),
-            "collector" => Ok(Command::collector),
+            "summon" => Ok(Command::Summon),
+            "collector" => Ok(Command::Collector),
             _ => Err(()),
         };
     }
@@ -69,7 +68,7 @@ fn command_collector(socket_filepath: String, args: Vec<String>) {
 
 
 fn main() {
-    let mut command = Command::summon;
+    let mut command = Command::Summon;
     let mut args = vec!();
     let mut socket_filepath: String = {
         let mut buf = home_dir().unwrap();
@@ -94,7 +93,7 @@ fn main() {
     args.insert(0, format!("command {:?}", command));
 
     match command {
-        Command::summon => command_summon(socket_filepath, args),
-        Command::collector => command_collector(socket_filepath, args)
+        Command::Summon => command_summon(socket_filepath, args),
+        Command::Collector => command_collector(socket_filepath, args)
     }
 }
