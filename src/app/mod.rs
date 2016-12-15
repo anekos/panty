@@ -42,6 +42,7 @@ fn listen(stocks: collector::Stocks, socket_filepath: String) {
                         let param: summoner::Parameter = json::decode(buf.as_str()).expect("Fail: json::decode");
                         let stock = collector::emit(stocks.clone());
                         summoner::summon(stock.servername, stock.window, param);
+                        collector::collect(stocks.clone(), 1);
                     }
                 }
             }
