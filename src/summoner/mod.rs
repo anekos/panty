@@ -8,7 +8,7 @@ use gvim;
 
 
 
-#[derive(RustcEncodable, RustcDecodable, Clone)]
+#[derive(RustcEncodable, RustcDecodable, Clone, Debug)]
 pub struct Parameter {
     pub files: Vec<String>,
     pub role: Option<String>
@@ -22,11 +22,12 @@ pub fn cast(socket_filepath: String, param: Parameter) {
 }
 
 
+
 pub fn summon(servername: String, window: Window, param: Parameter) {
     with_display!(display => {
         let desktop = get_current_desktop(display) as i64;
 
-        println!("summon: window = {}, desktop = {}, servername = {}", window, desktop, servername);
+        trace!("summon: window = {}, desktop = {}, servername = {}", window, desktop, servername);
 
         set_window_role(display, window, &"PANTY");
         map_window(display, window);

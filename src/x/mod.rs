@@ -12,7 +12,7 @@ macro_rules! with_display {
     { $display:ident => $y:expr }  => {
         {
             use std::ptr::null;
-            use x11::xlib::{XOpenDisplay, XCloseDisplay};
+            use x11::xlib::{XOpenDisplay, XCloseDisplay, Display};
             use x::*;
 
             unsafe {
@@ -26,6 +26,13 @@ macro_rules! with_display {
 
         }
     };
+}
+
+
+pub fn kill_window(display: *mut Display, window: Window) {
+    unsafe {
+        XKillClient(display, window);
+    }
 }
 
 

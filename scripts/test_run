@@ -9,5 +9,5 @@ then
   rm RUNNING_PID
 fi
 
-./target/debug/panty collector --stocks 3 &
+RUST_LOG=trace ./target/debug/panty collector --stocks 3 --watch /tmp/xmosh &
 echo "$!" >> RUNNING_PID

@@ -1,8 +1,9 @@
 
 extern crate panty;
 extern crate argparse;
+extern crate env_logger;
 
-use argparse::{ArgumentParser, Store, StoreOption, List};
+use argparse::{ArgumentParser, Store, StoreOption, List, Collect};
 use std::env::home_dir;
 use std::io::{stdout, stderr};
 use std::str::FromStr;
@@ -52,6 +53,7 @@ fn command_summon(socket_filepath: String, args: Vec<String>) {
 
 fn command_collector(socket_filepath: String, args: Vec<String>) {
     let mut max_stocks = 1;
+    let mut watch_targets: Vec<String> = vec![];
 
     {
         let mut ap = ArgumentParser::new();
@@ -59,15 +61,18 @@ fn command_collector(socket_filepath: String, args: Vec<String>) {
         ap.set_description("Summon gVim window");
 
         ap.refer(&mut max_stocks).add_option(&["--stocks"], Store, "Max gvim stocks");
+        ap.refer(&mut watch_targets).add_option(&["--watch"], Collect, "Watch file or dirctory");
 
         ap.parse(args, &mut stdout(), &mut stderr()).map_err(|x| std::process::exit(x)).unwrap();
     }
 
-    collector::start(max_stocks, socket_filepath);
+    app::start(max_stocks, socket_filepath, watch_targets);
 }
 
 
 fn main() {
+    env_logger::init().unwrap();
+
     let mut command = Command::Summon;
     let mut args = vec!();
     let mut socket_filepath: String = {

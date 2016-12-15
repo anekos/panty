@@ -5,8 +5,11 @@ authors = ["anekos <anekos@snca.net>"]
 
 [dependencies]
 argparse = "*"
+log = "*"
+env_logger = "*"
 lazy_static = "*"
 libc = "*"
 unix_socket = "*"
 x11 = { version = "*", features = ["xlib", "xinerama"] }
 rustc-serialize = "*"
+inotify = "*"

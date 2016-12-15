@@ -7,7 +7,7 @@ use std::process::Command;
 use std::process::Stdio;
 use std::thread;
 use std::time::Duration;
-use x11::xlib::{Window, Display};
+use x11::xlib::Window;
 
 
 
@@ -50,7 +50,7 @@ pub fn spawn_in_secret(servername: &String) -> Window {
     with_display!(display => {
         let wid = spawn(servername);
 
-        println!("spawn_in_secret: {}", wid);
+        trace!("spawn_in_secret: {}", wid);
 
         while !window_exists(display, wid) {
             thread::sleep(Duration::from_millis(1));
@@ -70,7 +70,7 @@ pub fn spawn_in_secret(servername: &String) -> Window {
             }
         }
 
-        println!("spawn_in_secret: unmapped");
+        trace!("spawn_in_secret: unmapped");
 
         wid
     })
