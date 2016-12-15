@@ -1,16 +1,14 @@
 
-
 use rustc_serialize::json;
 use std::io::prelude::Write;
 use unix_socket::UnixStream;
-use x11::xlib::Window;
+use x11::xlib::*;
 
 use gvim;
-use x;
 
 
 
-#[derive(RustcEncodable, RustcDecodable)]
+#[derive(RustcEncodable, RustcDecodable, Clone)]
 pub struct Parameter {
     pub files: Vec<String>,
     pub role: Option<String>
@@ -25,14 +23,16 @@ pub fn cast(socket_filepath: String, param: Parameter) {
 
 
 pub fn summon(servername: String, window: Window, param: Parameter) {
-    let desktop = x::get_current_desktop() as i64;
+    with_display!(display => {
+        let desktop = get_current_desktop(display) as i64;
 
-    println!("summon: window = {}, desktop = {}, servername = {}", window, desktop, servername);
+        println!("summon: window = {}, desktop = {}, servername = {}", window, desktop, servername);
 
-    x::set_window_role(window, &"PANTY");
-    x::map_window(window);
-    x::set_desktop_for_window(window, desktop);
+        set_window_role(display, window, &"PANTY");
+        map_window(display, window);
+        set_desktop_for_window(display, window, desktop);
 
-    param.role.map(|role| x::set_window_role(window, role.as_str()));
-    gvim::send_files(&servername, param.files);
+         param.role.map(|role| set_window_role(display, window, role.as_str()));
+         gvim::send_files(&servername, param.files);
+    })
 }

@@ -38,7 +38,7 @@ pub fn start(max_stocks: usize, socket_filepath: String) {
                     _ => {
                         let param: summoner::Parameter = json::decode(buf.as_str()).expect("Fail: json::decode");
                         let stock = rx.recv().unwrap();
-                        summoner::summon(stock.servername, stock.window, param);
+                        summoner::summon(stock.servername, stock.window, param.clone());
                         make_stocks(tx.clone(), 1);
                     }
                 }

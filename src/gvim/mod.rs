@@ -7,9 +7,8 @@ use std::process::Command;
 use std::process::Stdio;
 use std::thread;
 use std::time::Duration;
-use x11::xlib::Window;
+use x11::xlib::{Window, Display};
 
-use x;
 
 
 pub fn send_files(servername: &String, files: Vec<String>) {
@@ -48,31 +47,33 @@ pub fn spawn(servername: &String) -> Window {
 
 
 pub fn spawn_in_secret(servername: &String) -> Window {
-    let wid = spawn(servername);
+    with_display!(display => {
+        let wid = spawn(servername);
 
-    println!("spawn_in_secret: {}", wid);
+        println!("spawn_in_secret: {}", wid);
 
-    while !x::window_exists(wid) {
-        thread::sleep(Duration::from_millis(1));
-    }
-
-    {
-        let max_tries = 50;
-        let mut tried = 0;
-
-        while !x::is_window_visible(wid) && tried < max_tries {
-            tried += 1;
+        while !window_exists(display, wid) {
             thread::sleep(Duration::from_millis(1));
         }
 
-        if tried < max_tries {
-            x::unmap_window(wid);
+        {
+            let max_tries = 50;
+            let mut tried = 0;
+
+            while !is_window_visible(display, wid) && tried < max_tries {
+                tried += 1;
+                thread::sleep(Duration::from_millis(1));
+            }
+
+            if tried < max_tries {
+                unmap_window(display, wid);
+            }
         }
-    }
 
-    println!("spawn_in_secret: unmapped");
+        println!("spawn_in_secret: unmapped");
 
-    wid
+        wid
+    })
 }
 
 

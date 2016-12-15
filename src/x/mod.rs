@@ -1,20 +1,36 @@
 
-mod display;
-
 use std::ffi::CString;
 use std::mem::zeroed;
 use std::os::raw::c_void;
 use std::slice;
 use x11::xlib::*;
 
-use self::display::*;
 
 
+#[macro_export]
+macro_rules! with_display {
+    { $display:ident => $y:expr }  => {
+        {
+            use std::ptr::null;
+            use x11::xlib::{XOpenDisplay, XCloseDisplay};
+            use x::*;
 
-pub fn window_exists(window: Window) -> bool {
+            unsafe {
+                let $display: *mut Display = XOpenDisplay(null());
+                let result = {
+                    $y
+                };
+                XCloseDisplay($display);
+                result
+            }
+
+        }
+    };
+}
+
+
+pub fn window_exists(display: *mut Display, window: Window) -> bool {
     unsafe {
-        let display = **DISPLAY;
-
         let mut dummy: Window = zeroed();
         let mut p_children: *mut Window = zeroed();
         let mut n_children: u32 = 0;
@@ -40,9 +56,8 @@ pub fn window_exists(window: Window) -> bool {
     }
 }
 
-pub fn is_window_visible(window: Window) -> bool {
+pub fn is_window_visible(display: *mut Display, window: Window) -> bool {
     unsafe {
-        let display: *mut Display = **DISPLAY;
         let mut wattr: XWindowAttributes = zeroed();
         XGetWindowAttributes(display, window, &mut wattr);
         wattr.map_state == IsViewable
@@ -50,28 +65,24 @@ pub fn is_window_visible(window: Window) -> bool {
 }
 
 
-pub fn unmap_window(window: Window) {
+pub fn unmap_window(display: *mut Display, window: Window) {
     unsafe {
-        let display: *mut Display = **DISPLAY;
         XUnmapWindow(display, window);
         XFlush(display);
     }
 }
 
 
-pub fn map_window(window: Window) {
+pub fn map_window(display: *mut Display, window: Window) {
     unsafe {
-        let display: *mut Display = **DISPLAY;
         XMapWindow(display, window);
         XFlush(display);
     }
 }
 
 
-pub fn set_window_role(window: Window, role: &str) {
+pub fn set_window_role(display: *mut Display, window: Window, role: &str) {
     unsafe {
-        let display: *mut Display = **DISPLAY;
-
         XChangeProperty(
             display,
             window,
@@ -85,10 +96,8 @@ pub fn set_window_role(window: Window, role: &str) {
 }
 
 
-pub fn set_desktop_for_window(window: Window, desktop: i64) {
+pub fn set_desktop_for_window(display: *mut Display, window: Window, desktop: i64) {
     unsafe {
-        let display: *mut Display = **DISPLAY;
-
         let mut wattr: XWindowAttributes = zeroed();
         XGetWindowAttributes(display, window, &mut wattr);
 
@@ -126,10 +135,8 @@ pub fn set_desktop_for_window(window: Window, desktop: i64) {
 }
 
 
-pub fn get_current_desktop() ->  i64 {
+pub fn get_current_desktop(display: *mut Display) ->  i64 {
     unsafe {
-        let display: *mut Display = **DISPLAY;
-
         let root = XDefaultRootWindow(display);
 
         let mut actual_type: u64 = 0;
