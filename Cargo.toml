@@ -13,3 +13,4 @@ unix_socket = "*"
 x11 = { version = "*", features = ["xlib", "xinerama"] }
 rustc-serialize = "*"
 inotify = "*"
+ctrlc = { version = "2.0", features = ["termination"] }

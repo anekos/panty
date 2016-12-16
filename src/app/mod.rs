@@ -11,6 +11,7 @@ use unix_socket::{UnixListener};
 use summoner;
 use police;
 use collector;
+use executioner;
 
 
 pub fn start(max_stocks: usize, socket_filepath: String, watch_targets: Vec<String>) {
@@ -18,6 +19,7 @@ pub fn start(max_stocks: usize, socket_filepath: String, watch_targets: Vec<Stri
     initialize(&socket_filepath);
     collector::collect(stocks.clone(), max_stocks);
     police::patrol(stocks.clone(), max_stocks, watch_targets);
+    executioner::watch(stocks.clone());
     listen(stocks.clone(), socket_filepath);
 }
 

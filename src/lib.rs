@@ -9,6 +9,7 @@ extern crate log;
 extern crate argparse;
 extern crate rustc_serialize;
 extern crate inotify;
+extern crate ctrlc;
 
 
 
@@ -20,4 +21,5 @@ pub mod gvim;
 pub mod collector;
 pub mod summoner;
 pub mod police;
+pub mod executioner;
 pub mod app;
