@@ -24,7 +24,7 @@ pub fn collect(stocks: Stocks, n: usize) {
     for servername in names {
         let stocks = stocks.clone();
         thread::spawn(move || {
-            let window = gvim::spawn_in_secret(&servername);
+            let window = gvim::spawn_secretly(&servername);
             {
                 let mut stocks = stocks.lock().unwrap();
                 stocks.push_back(Stock {window: window, servername: servername});

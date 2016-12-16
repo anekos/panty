@@ -46,7 +46,7 @@ pub fn spawn(servername: &String) -> Window {
 }
 
 
-pub fn spawn_in_secret(servername: &String) -> Window {
+pub fn spawn_secretly(servername: &String) -> Window {
     with_display!(display => {
         let wid = spawn(servername);
 
