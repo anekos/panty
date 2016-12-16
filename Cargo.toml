@@ -14,13 +14,13 @@ name = "panty"
 doc = false
 
 [dependencies]
-argparse = "*"
-log = "*"
-env_logger = "*"
-lazy_static = "*"
-libc = "*"
-unix_socket = "*"
-x11 = { version = "*", features = ["xlib", "xinerama"] }
-rustc-serialize = "*"
-inotify = "*"
+argparse = "0.2"
+log = "0.3"
+env_logger = "0.3"
+lazy_static = "0.2"
+libc = "0.2"
+unix_socket = "0.5"
+x11 = { version = "2.11", features = ["xlib", "xinerama"] }
+rustc-serialize = "0.3"
+inotify = "0.3"
 ctrlc = { version = "2.0", features = ["termination"] }
