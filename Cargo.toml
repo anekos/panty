@@ -3,6 +3,10 @@ name = "panty"
 version = "0.1.0"
 authors = ["anekos <anekos@snca.net>"]
 
+[[bin]]
+name = "panty"
+doc = false
+
 [dependencies]
 argparse = "*"
 log = "*"
