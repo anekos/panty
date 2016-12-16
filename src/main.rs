@@ -39,7 +39,7 @@ fn command_summon(socket_filepath: String, args: Vec<String>) {
 
         ap.set_description("Summon gVim window");
 
-        ap.refer(&mut role).add_option(&["--role"], StoreOption, "Set window role");
+        ap.refer(&mut role).add_option(&["--role", "-r"], StoreOption, "Set window role");
         ap.refer(&mut command_args).add_argument("arguments", List, "Files");
 
         ap.parse(args, &mut stdout(), &mut stderr()).map_err(|x| std::process::exit(x)).unwrap();
@@ -60,8 +60,8 @@ fn command_collector(socket_filepath: String, args: Vec<String>) {
 
         ap.set_description("Summon gVim window");
 
-        ap.refer(&mut max_stocks).add_option(&["--stocks"], Store, "Max gvim stocks");
-        ap.refer(&mut watch_targets).add_option(&["--watch"], Collect, "Watch file or dirctory");
+        ap.refer(&mut max_stocks).add_option(&["--stocks", "-s"], Store, "Max gvim stocks");
+        ap.refer(&mut watch_targets).add_option(&["--watch", "-w"], Collect, "Watch file or dirctory");
 
         ap.parse(args, &mut stdout(), &mut stderr()).map_err(|x| std::process::exit(x)).unwrap();
     }
@@ -86,7 +86,7 @@ fn main() {
 
         ap.set_description("panty and stocking");
 
-        ap.refer(&mut socket_filepath).add_option(&["--socket"], Store, "Socket file path");
+        ap.refer(&mut socket_filepath).add_option(&["--socket", "-s"], Store, "Socket file path");
 
         ap.refer(&mut command).required().add_argument("command", Store, "summon/collector");
         ap.refer(&mut args).add_argument("arguments", List, r#"Arguments for command"#);
