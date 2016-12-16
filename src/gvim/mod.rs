@@ -50,7 +50,7 @@ pub fn spawn_in_secret(servername: &String) -> Window {
     with_display!(display => {
         let wid = spawn(servername);
 
-        trace!("spawn_in_secret: {}", wid);
+        trace!("spawning: {}", wid);
 
         while !window_exists(display, wid) {
             thread::sleep(Duration::from_millis(1));
@@ -66,12 +66,12 @@ pub fn spawn_in_secret(servername: &String) -> Window {
             }
 
             if tried < max_tries {
-                // set_desktop_for_window(display, wid, 5);
+                // TODO?? set_desktop_for_window(display, wid, 5);
                 unmap_window(display, wid);
             }
         }
 
-        trace!("spawn_in_secret: unmapped");
+        trace!("spawned: {}", wid);
 
         wid
     })

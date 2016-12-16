@@ -29,9 +29,12 @@ macro_rules! with_display {
 }
 
 
-pub fn raise_window(display: *mut Display, window: Window) {
+pub fn restore_window(display: *mut Display, window: Window) {
     unsafe {
+        XMapWindow(display, window);
         XRaiseWindow(display, window);
+        XDeleteProperty(display, window, intern_atom(display, "_NET_WM_STATE"));
+        XFlush(display);
     }
 }
 
@@ -82,14 +85,6 @@ pub fn is_window_visible(display: *mut Display, window: Window) -> bool {
 pub fn unmap_window(display: *mut Display, window: Window) {
     unsafe {
         XUnmapWindow(display, window);
-        XFlush(display);
-    }
-}
-
-
-pub fn map_window(display: *mut Display, window: Window) {
-    unsafe {
-        XMapWindow(display, window);
         XFlush(display);
     }
 }
