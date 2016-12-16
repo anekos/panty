@@ -29,6 +29,13 @@ macro_rules! with_display {
 }
 
 
+pub fn raise_window(display: *mut Display, window: Window) {
+    unsafe {
+        XRaiseWindow(display, window);
+    }
+}
+
+
 pub fn kill_window(display: *mut Display, window: Window) {
     unsafe {
         XKillClient(display, window);

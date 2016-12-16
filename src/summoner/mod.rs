@@ -31,6 +31,7 @@ pub fn summon(servername: String, window: Window, param: Parameter) {
 
         set_window_role(display, window, &"PANTY");
         map_window(display, window);
+        raise_window(display, window);
         set_desktop_for_window(display, window, desktop);
 
          param.role.map(|role| set_window_role(display, window, role.as_str()));
