@@ -9,7 +9,6 @@ readme = "README.md"
 description = "Fast gVim summoner"
 # documentation = http://anekos.github.io/panty
 
-
 [[bin]]
 name = "panty"
 doc = false
