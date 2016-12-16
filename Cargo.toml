@@ -2,6 +2,13 @@
 name = "panty"
 version = "0.1.0"
 authors = ["anekos <anekos@snca.net>"]
+repository = "https://github.com/anekos/panty"
+keywords = ["vim", "gvim", "linux"]
+license-file = "GPLv3"
+readme = "README.md"
+description = "Fast gVim summoner"
+# documentation = http://anekos.github.io/panty
+
 
 [[bin]]
 name = "panty"
