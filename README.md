@@ -28,6 +28,12 @@ $ panty summon /etc/fstab /etc/whois.conf
 
 Brings the stocked gVim instance to current desktop, then opens `/etc/fstab` and `/etc/whois.conf`.
 
+## Output logs
+
+```
+$ RUST_LOG=trace panty ...
+```
+
 
 # Requirements
 
