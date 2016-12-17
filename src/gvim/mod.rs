@@ -37,12 +37,24 @@ pub fn spawn(servername: &String) -> Window {
         .spawn()
         .expect("Failed to execute process");
 
-    let mut echoed = String::new();
-    BufReader::new(child.stdout.unwrap()).read_line(&mut echoed).unwrap();
+    let mut line: String = String::new();
+    let mut reader = BufReader::new(child.stdout.unwrap());
 
-    let wid_str: String = echoed.chars().skip_while(|c| *c != ' ').skip(1).collect();
+    for _ in 0..300 {
 
-    wid_str.trim().parse().unwrap()
+        if let Ok(len) = reader.read_line(&mut line) {
+            if len > 0 {
+                if let Some(pos) = line.find("WID: ") {
+                    let (_, wid) = line.split_at(pos + 5);
+                    return wid.trim().parse().unwrap();
+                }
+                continue;
+            }
+        }
+        break;
+    }
+
+    panic!("WID not found!")
 }
 
 
