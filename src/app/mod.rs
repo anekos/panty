@@ -19,14 +19,14 @@ pub fn start(max_stocks: usize, socket_filepath: String, watch_targets: Vec<Stri
     initialize(&socket_filepath);
     collector::collect(stocks.clone(), max_stocks);
     police::patrol(stocks.clone(), max_stocks, &watch_targets);
-    executioner::watch(stocks.clone());
+    executioner::watch(stocks.clone(), socket_filepath.clone());
     listen(stocks.clone(), socket_filepath);
 }
 
 
 fn initialize(socket_filepath: &String) {
     if Path::new(&socket_filepath).exists() {
-        remove_file(&socket_filepath).expect("Faild: remove socket");
+        remove_file(&socket_filepath).expect("Faild: remove socket file");
     }
 }
 
