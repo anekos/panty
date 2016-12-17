@@ -18,6 +18,8 @@ pub mod utils;
 #[macro_use]
 pub mod x;
 pub mod gvim;
+pub mod spell;
+pub mod mage;
 pub mod collector;
 pub mod summoner;
 pub mod police;

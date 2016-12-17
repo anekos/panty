@@ -45,3 +45,21 @@ pub fn emit(stocks: Stocks) -> Stock {
         }
     }
 }
+
+
+pub fn renew(stocks: Stocks, max_stocks: usize) {
+    let killees = {
+        let mut stocks = stocks.lock().unwrap();
+        tap!((*stocks).clone() => stocks.clear())
+    };
+
+    thread::spawn(move || {
+        with_display!(display => {
+            for killee in killees {
+                trace!("kill: {}", killee.servername);
+                kill_window(display, killee.window);
+            }
+        });
+        collect(stocks, max_stocks);
+    });
+}
