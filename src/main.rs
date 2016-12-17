@@ -16,6 +16,7 @@ use panty::*;
 enum Command {
     Summon,
     Collector,
+    Renew
 }
 
 impl FromStr for Command {
@@ -24,6 +25,7 @@ impl FromStr for Command {
         return match src {
             "summon" => Ok(Command::Summon),
             "collector" => Ok(Command::Collector),
+            "renew" => Ok(Command::Renew),
             _ => Err(()),
         };
     }
@@ -45,9 +47,9 @@ fn command_summon(socket_filepath: String, args: Vec<String>) {
         ap.parse(args, &mut stdout(), &mut stderr()).map_err(|x| std::process::exit(x)).unwrap();
     }
 
-    summoner::cast(
+    spell::cast(
         socket_filepath,
-        summoner::Parameter {files: command_args, role: role});
+        spell::Spell::Summon {files: command_args, role: role});
 }
 
 
@@ -70,6 +72,13 @@ fn command_collector(socket_filepath: String, args: Vec<String>) {
 }
 
 
+fn command_renew(socket_filepath: String) {
+    spell::cast(
+        socket_filepath,
+        spell::Spell::Renew);
+}
+
+
 fn main() {
     env_logger::init().unwrap();
 
@@ -88,8 +97,8 @@ fn main() {
 
         ap.refer(&mut socket_filepath).add_option(&["--socket", "-s"], Store, "Socket file path");
 
-        ap.refer(&mut command).required().add_argument("command", Store, "summon/collector");
-        ap.refer(&mut args).add_argument("arguments", List, r#"Arguments for command"#);
+        ap.refer(&mut command).required().add_argument("command", Store, "summon|collector|renew");
+        ap.refer(&mut args).add_argument("arguments", List, "Arguments for command");
 
         ap.stop_on_first_argument(true);
         ap.parse_args_or_exit();
@@ -99,6 +108,7 @@ fn main() {
 
     match command {
         Command::Summon => command_summon(socket_filepath, args),
-        Command::Collector => command_collector(socket_filepath, args)
+        Command::Collector => command_collector(socket_filepath, args),
+        Command::Renew => command_renew(socket_filepath)
     }
 }

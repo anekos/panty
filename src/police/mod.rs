@@ -58,7 +58,7 @@ fn file_patrol(stocks: collector::Stocks, max_stocks: usize, targets: &Vec<Strin
                 if let Some(set) = table.get(&event.wd) {
                     if set.contains(event.name.to_str().unwrap()) {
                         trace!("file_changes: name = {}, wd = {}", event.name.to_str().unwrap(), event.wd);
-                        renew(stocks.clone(), max_stocks)
+                        collector::renew(stocks.clone(), max_stocks)
                     }
                 }
             }
@@ -80,26 +80,8 @@ fn directory_patrol(stocks: collector::Stocks, max_stocks: usize, targets: &Vec<
         for event in events.iter() {
             if !event.is_dir() {
                 trace!("file_changes: {}", event.name.to_str().unwrap());
-                renew(stocks.clone(), max_stocks)
+                collector::renew(stocks.clone(), max_stocks)
             }
         }
     }
-}
-
-
-fn renew(stocks: collector::Stocks, max_stocks: usize) {
-    let killees = {
-        let mut stocks = stocks.lock().unwrap();
-        tap!((*stocks).clone() => stocks.clear())
-    };
-
-    thread::spawn(move || {
-        with_display!(display => {
-            for killee in killees {
-                trace!("kill: {}", killee.servername);
-                kill_window(display, killee.window);
-            }
-        });
-        collector::collect(stocks, max_stocks);
-    });
 }
