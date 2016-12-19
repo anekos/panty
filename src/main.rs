@@ -56,6 +56,7 @@ fn command_summon(socket_filepath: String, args: Vec<String>) {
 fn command_collector(socket_filepath: String, args: Vec<String>) {
     let mut max_stocks = 1;
     let mut watch_targets: Vec<String> = vec![];
+    let mut recursive_watch_targets: Vec<String> = vec![];
 
     {
         let mut ap = ArgumentParser::new();
@@ -64,11 +65,12 @@ fn command_collector(socket_filepath: String, args: Vec<String>) {
 
         ap.refer(&mut max_stocks).add_option(&["--stocks", "-s"], Store, "Max gvim stocks");
         ap.refer(&mut watch_targets).add_option(&["--watch", "-w"], Collect, "Watch file or dirctory");
+        ap.refer(&mut recursive_watch_targets).add_option(&["--rwatch", "-W"], Collect, "Watch dirctory (recursive)");
 
         ap.parse(args, &mut stdout(), &mut stderr()).map_err(|x| std::process::exit(x)).unwrap();
     }
 
-    app::start(max_stocks, socket_filepath, watch_targets);
+    app::start(max_stocks, socket_filepath, watch_targets, recursive_watch_targets);
 }
 
 

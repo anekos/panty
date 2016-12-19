@@ -4,7 +4,9 @@ use inotify::INotify;
 use inotify::ffi::*;
 use std::collections::{HashSet, HashMap};
 use std::path::Path;
+use std::path::PathBuf;
 use std::thread;
+use walkdir::WalkDir;
 
 use collector;
 
@@ -13,16 +15,24 @@ use collector;
 const EVENTS: u32 = IN_CREATE | IN_MODIFY | IN_DELETE;
 
 
-pub fn patrol(stocks: collector::Stocks, max_stocks: usize, targets: &Vec<String>) {
-    let mut files: Vec<String> = vec![];
-    let mut directories: Vec<String> = vec![];
+pub fn patrol(stocks: collector::Stocks, max_stocks: usize, targets: &Vec<String>, rec_targets: &Vec<String>) {
+    let mut files: Vec<PathBuf> = vec![];
+    let mut directories: Vec<PathBuf> = vec![];
 
     for target in targets {
-        let path = Path::new(target);
+        let path = Path::new(target).to_path_buf();
         if path.is_file() {
-            files.push(target.to_string());
+            files.push(path);
         } else {
-            directories.push(target.to_string());
+            directories.push(path);
+        }
+    }
+
+    for target in rec_targets {
+        for entry in WalkDir::new(target).into_iter().filter_map(|e| e.ok()) {
+            if entry.file_type().is_dir() {
+                directories.push(entry.path().to_path_buf());
+            }
         }
     }
 
@@ -37,15 +47,14 @@ pub fn patrol(stocks: collector::Stocks, max_stocks: usize, targets: &Vec<String
 }
 
 
-fn file_patrol(stocks: collector::Stocks, max_stocks: usize, targets: &Vec<String>) {
+fn file_patrol(stocks: collector::Stocks, max_stocks: usize, targets: &Vec<PathBuf>) {
     let mut ino = INotify::init().unwrap();
     let mut table: HashMap<i32, HashSet<String>> = HashMap::new();
 
     for target in targets {
-        let path = Path::new(target);
-        if let Some(dir) = path.parent() {
+        if let Some(dir) = target.parent() {
             let wd = ino.add_watch(dir, EVENTS).unwrap();
-            let name = path.file_name().unwrap().to_str().unwrap().to_string();
+            let name = target.file_name().unwrap().to_str().unwrap().to_string();
             table.entry(wd).or_insert_with(|| HashSet::new()).insert(name);
         }
     }
@@ -67,11 +76,11 @@ fn file_patrol(stocks: collector::Stocks, max_stocks: usize, targets: &Vec<Strin
 }
 
 
-fn directory_patrol(stocks: collector::Stocks, max_stocks: usize, targets: &Vec<String>) {
+fn directory_patrol(stocks: collector::Stocks, max_stocks: usize, targets: &Vec<PathBuf>) {
     let mut ino = INotify::init().unwrap();
 
     for target in targets {
-        ino.add_watch(Path::new(target), EVENTS).unwrap();
+        ino.add_watch(target, EVENTS).unwrap();
     }
 
     loop {
