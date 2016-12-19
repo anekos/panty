@@ -23,8 +23,10 @@ pub fn patrol(stocks: collector::Stocks, max_stocks: usize, targets: &Vec<String
         let path = Path::new(target).to_path_buf();
         if path.is_file() {
             files.push(path);
-        } else {
+        } else if path.is_dir() {
             directories.push(path);
+        } else {
+            error!("Invalid watch target: {}", path.to_str().unwrap());
         }
     }
 
@@ -50,12 +52,16 @@ pub fn patrol(stocks: collector::Stocks, max_stocks: usize, targets: &Vec<String
 fn file_patrol(stocks: collector::Stocks, max_stocks: usize, targets: &Vec<PathBuf>) {
     let mut ino = INotify::init().unwrap();
     let mut table: HashMap<i32, HashSet<String>> = HashMap::new();
+    let mut watched: HashMap<PathBuf, i32> = HashMap::new();
 
     for target in targets {
         if let Some(dir) = target.parent() {
-            let wd = ino.add_watch(dir, EVENTS).unwrap();
+            let wd = watched.entry(dir.to_path_buf()).or_insert_with(|| {
+                trace!("watch: {}", dir.to_str().unwrap());
+                ino.add_watch(dir, EVENTS).unwrap()
+            });
             let name = target.file_name().unwrap().to_str().unwrap().to_string();
-            table.entry(wd).or_insert_with(|| HashSet::new()).insert(name);
+            table.entry(*wd).or_insert_with(|| HashSet::new()).insert(name);
         }
     }
 
@@ -80,6 +86,7 @@ fn directory_patrol(stocks: collector::Stocks, max_stocks: usize, targets: &Vec<
     let mut ino = INotify::init().unwrap();
 
     for target in targets {
+        trace!("watch: {}", target.to_str().unwrap());
         ino.add_watch(target, EVENTS).unwrap();
     }
 

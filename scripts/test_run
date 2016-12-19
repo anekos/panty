@@ -9,5 +9,5 @@ then
   rm RUNNING_PID
 fi
 
-RUST_LOG=trace ./target/debug/panty collector --stocks 3 --watch /tmp/xmosh &
+RUST_LOG=trace ./target/debug/panty collector --stocks 5 --watch ~/.vimrc --recursive-watch ~/.vim/part/ &
 echo "$!" >> RUNNING_PID

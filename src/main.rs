@@ -65,7 +65,7 @@ fn command_collector(socket_filepath: String, args: Vec<String>) {
 
         ap.refer(&mut max_stocks).add_option(&["--stocks", "-s"], Store, "Max gvim stocks");
         ap.refer(&mut watch_targets).add_option(&["--watch", "-w"], Collect, "Watch file or dirctory");
-        ap.refer(&mut recursive_watch_targets).add_option(&["--rwatch", "-W"], Collect, "Watch dirctory (recursive)");
+        ap.refer(&mut recursive_watch_targets).add_option(&["--recursive-watch", "-W"], Collect, "Watch dirctory (recursive)");
 
         ap.parse(args, &mut stdout(), &mut stderr()).map_err(|x| std::process::exit(x)).unwrap();
     }
