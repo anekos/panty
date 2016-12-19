@@ -10,6 +10,7 @@ extern crate argparse;
 extern crate rustc_serialize;
 extern crate inotify;
 extern crate ctrlc;
+extern crate walkdir;
 
 
 
