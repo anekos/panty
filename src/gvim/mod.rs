@@ -8,6 +8,8 @@ use std::thread;
 use std::time::Duration;
 use x11::xlib::Window;
 
+use namer;
+
 
 #[derive(Clone)]
 pub struct Options {
@@ -118,10 +120,8 @@ pub fn new_servernames(windows: usize) -> Vec<String> {
             names.insert(name);
         }
 
-        let mut id = 1;
         loop {
-            id += 1;
-            let name = make_servername(id);
+            let name = namer::name();
             if !names.contains(&name.as_str()) {
                 result.push(name);
                 if result.len() >= windows {
@@ -132,11 +132,4 @@ pub fn new_servernames(windows: usize) -> Vec<String> {
 
         result
     }).unwrap()
-}
-
-
-fn make_servername(id: u64) -> String {
-    let mut servername: String = "STOCKING-".to_string();
-    servername.push_str(id.to_string().as_str());
-    servername
 }

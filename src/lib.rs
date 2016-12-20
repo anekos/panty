@@ -11,6 +11,7 @@ extern crate rustc_serialize;
 extern crate inotify;
 extern crate ctrlc;
 extern crate walkdir;
+extern crate rand;
 
 
 
@@ -18,6 +19,7 @@ extern crate walkdir;
 pub mod utils;
 #[macro_use]
 pub mod x;
+pub mod namer;
 pub mod gvim;
 pub mod spell;
 pub mod mage;
