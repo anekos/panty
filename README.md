@@ -14,7 +14,7 @@ $ ~/.cargo/bin/panty -h
 ## Start gVim instance stocker
 
 ```
-$ panty collector --stocks 5 --watch ~/.vimrc --watch ~/.gvimrc
+$ panty collector --stocks 5 --watch ~/.vimrc --watch ~/.gvimrc --recursive-watch ~/.vim/
 ```
 
 **collector** stocks 5 gVim instances, and watch 2 files for renewal these instances.
