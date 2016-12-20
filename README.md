@@ -1,4 +1,7 @@
 
+
+[![Crates.io](https://img.shields.io/crates/v/panty.svg)](https://crates.io/crates/panty)
+
 # Stock gVim instance and Summon it
 
 Build and Install
