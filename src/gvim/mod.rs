@@ -11,7 +11,8 @@ use x11::xlib::Window;
 
 #[derive(Clone)]
 pub struct Options {
-    pub current_directory: Option<String>
+    pub current_directory: Option<String>,
+    pub command: String
 }
 
 
@@ -31,7 +32,7 @@ pub fn send_files(servername: &String, files: Vec<String>) {
 
 
 pub fn spawn(servername: &String, options: &Options) -> Window {
-    let mut command = Command::new("gvim");
+    let mut command = Command::new(options.command.clone());
 
     command.arg("--nofork")
         .arg("--echo-wid")
