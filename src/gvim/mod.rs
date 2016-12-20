@@ -1,5 +1,4 @@
 
-
 use std::collections::HashSet;
 use std::io::BufReader;
 use std::io::prelude::*;
@@ -8,6 +7,12 @@ use std::process::Stdio;
 use std::thread;
 use std::time::Duration;
 use x11::xlib::Window;
+
+
+#[derive(Clone)]
+pub struct Options {
+    pub current_directory: Option<String>
+}
 
 
 
@@ -25,14 +30,21 @@ pub fn send_files(servername: &String, files: Vec<String>) {
 }
 
 
-pub fn spawn(servername: &String) -> Window {
-    let child = Command::new("gvim")
-        .arg("--nofork")
+pub fn spawn(servername: &String, options: &Options) -> Window {
+    let mut command = Command::new("gvim");
+
+    command.arg("--nofork")
         .arg("--echo-wid")
         .arg("--role=STOCKING")
         .arg("-iconic")
         .arg("--servername")
-        .arg(servername)
+        .arg(servername);
+
+    if let Some(current_directory) = options.current_directory.clone() {
+        command.current_dir(current_directory);
+    }
+
+    let child = command
         .stdout(Stdio::piped())
         .spawn()
         .expect("Failed to execute process");
@@ -58,9 +70,9 @@ pub fn spawn(servername: &String) -> Window {
 }
 
 
-pub fn spawn_secretly(servername: &String) -> Window {
+pub fn spawn_secretly(servername: &String, options: &Options) -> Window {
     with_display!(display => {
-        let wid = spawn(servername);
+        let wid = spawn(servername, options);
 
         trace!("spawning: {}", wid);
 
