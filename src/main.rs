@@ -59,6 +59,7 @@ fn command_collector(socket_filepath: String, args: Vec<String>) {
     let mut recursive_watch_targets: Vec<String> = vec![];
     let mut current_directory = None;
     let mut gvim_command = "gvim".to_string();
+    let mut no_unmap = false;
 
     {
         let mut ap = ArgumentParser::new();
@@ -70,6 +71,7 @@ fn command_collector(socket_filepath: String, args: Vec<String>) {
         ap.refer(&mut recursive_watch_targets).add_option(&["--recursive-watch", "-W"], Collect, "Watch dirctory (recursive)");
         ap.refer(&mut current_directory).add_option(&["--cd", "-c", "--current-directory"], StoreOption, "Current directory");
         ap.refer(&mut gvim_command).add_option(&["--gvim-command", "-g"], Store, "gVim command");
+        ap.refer(&mut no_unmap).add_option(&["--no-unmap"], Store, "Do not unmap");
 
         ap.parse(args, &mut stdout(), &mut stderr()).map_err(|x| std::process::exit(x)).unwrap();
     }
@@ -79,7 +81,7 @@ fn command_collector(socket_filepath: String, args: Vec<String>) {
         socket_filepath,
         watch_targets,
         recursive_watch_targets,
-        gvim::Options {current_directory: current_directory, command: gvim_command});
+        gvim::Options {current_directory: current_directory, command: gvim_command, unmap: !no_unmap});
 }
 
 

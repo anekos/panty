@@ -14,7 +14,8 @@ use namer;
 #[derive(Clone)]
 pub struct Options {
     pub current_directory: Option<String>,
-    pub command: String
+    pub command: String,
+    pub unmap: bool
 }
 
 
@@ -79,22 +80,24 @@ pub fn spawn_secretly(servername: &String, options: &Options) -> Window {
 
         trace!("spawning: {}", wid);
 
-        while !window_exists(display, wid) {
-            thread::sleep(Duration::from_millis(1));
-        }
-
-        {
-            let max_tries = 50;
-            let mut tried = 0;
-
-            while !is_window_visible(display, wid) && tried < max_tries {
-                tried += 1;
+        if options.unmap {
+            while !window_exists(display, wid) {
                 thread::sleep(Duration::from_millis(1));
             }
 
-            if tried < max_tries {
-                // TODO?? set_desktop_for_window(display, wid, 5);
-                unmap_window(display, wid);
+            {
+                let max_tries = 50;
+                let mut tried = 0;
+
+                while !is_window_visible(display, wid) && tried < max_tries {
+                    tried += 1;
+                    thread::sleep(Duration::from_millis(1));
+                }
+
+                if tried < max_tries {
+                    // TODO?? set_desktop_for_window(display, wid, 5);
+                    unmap_window(display, wid);
+                }
             }
         }
 
