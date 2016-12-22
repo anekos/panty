@@ -16,6 +16,6 @@ pub fn summon(servername: String, window: Window, files: Vec<String>, role: Opti
         set_desktop_for_window(display, window, desktop);
 
          role.map(|role| set_window_role(display, window, role.as_str()));
-         gvim::send_files(&servername, files);
+         gvim::send_files(&servername, files, false);
     })
 }
