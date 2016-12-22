@@ -16,16 +16,25 @@ use panty::*;
 enum Command {
     Summon,
     Collector,
-    Renew
+    Renew,
+    Edit,
+    TabEdit,
 }
 
 impl FromStr for Command {
     type Err = ();
     fn from_str(src: &str) -> Result<Command, ()> {
         return match src {
-            "summon" => Ok(Command::Summon),
-            "collector" => Ok(Command::Collector),
-            "renew" => Ok(Command::Renew),
+            "summon" | "s"
+                => Ok(Command::Summon),
+            "collector" | "c"
+                => Ok(Command::Collector),
+            "renew" | "r"
+                => Ok(Command::Renew),
+            "edit" | "e"
+                => Ok(Command::Edit),
+            "tabedit" | "tedit" | "t"
+                => Ok(Command::TabEdit),
             _ => Err(()),
         };
     }
@@ -92,6 +101,23 @@ fn command_renew(socket_filepath: String) {
 }
 
 
+fn command_edit(args: Vec<String>, tab: bool) {
+    let mut files: Vec<String> = vec![];
+
+    {
+        let mut ap = ArgumentParser::new();
+
+        ap.set_description("Send files to gVim");
+
+        ap.refer(&mut files).add_argument("arguments", List, "Files");
+
+        ap.parse(args, &mut stdout(), &mut stderr()).map_err(|x| std::process::exit(x)).unwrap();
+    }
+
+    sender::send_files(files, tab);
+}
+
+
 fn main() {
     env_logger::init().unwrap();
 
@@ -110,7 +136,7 @@ fn main() {
 
         ap.refer(&mut socket_filepath).add_option(&["--socket", "-s"], Store, "Socket file path");
 
-        ap.refer(&mut command).required().add_argument("command", Store, "summon|collector|renew");
+        ap.refer(&mut command).required().add_argument("command", Store, "summon|collector|renew|edit");
         ap.refer(&mut args).add_argument("arguments", List, "Arguments for command");
 
         ap.stop_on_first_argument(true);
@@ -122,6 +148,8 @@ fn main() {
     match command {
         Command::Summon => command_summon(socket_filepath, args),
         Command::Collector => command_collector(socket_filepath, args),
-        Command::Renew => command_renew(socket_filepath)
+        Command::Renew => command_renew(socket_filepath),
+        Command::Edit => command_edit(args, false),
+        Command::TabEdit => command_edit(args, true),
     }
 }

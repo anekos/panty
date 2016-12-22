@@ -1,5 +1,5 @@
 
-use std::ffi::CString;
+use std::ffi::{CString, CStr};
 use std::mem::zeroed;
 use std::os::raw::c_void;
 use std::slice;
@@ -29,6 +29,27 @@ macro_rules! with_display {
 }
 
 
+pub fn fetch_all_windows(display: *mut Display) -> Vec<u64> {
+    unsafe {
+        let mut dummy: Window = zeroed();
+        let root = XDefaultRootWindow(display);
+        let mut p_children: *mut Window = zeroed();
+        let mut n_children: u32 = 0;
+        XQueryTree(display, root, &mut dummy, &mut dummy, &mut p_children, &mut n_children);
+
+        if n_children <= 0 {
+            return vec![];
+        }
+
+        let children = Vec::from_raw_parts(p_children as *mut Window, n_children as usize, n_children as usize);
+
+        XFree(p_children as *mut c_void);
+
+        return children
+    }
+}
+
+
 pub fn set_text_property(display: *mut Display, window: Window, name: &str, value: &str) {
     unsafe {
         XChangeProperty(
@@ -40,6 +61,61 @@ pub fn set_text_property(display: *mut Display, window: Window, name: &str, valu
             PropModeReplace,
             value.as_ptr(),
             value.len() as i32);
+    }
+}
+
+
+pub fn get_text_property(display: *mut Display, window: Window, name: &str) -> Option<String> {
+    unsafe {
+        let mut actual_type: u64 = 0;
+        let mut actual_format: i32 = 0;
+        let mut n_items: u64 = 0;
+        let mut bytes_after: u64 = 0;
+        let mut prop: *mut u8 = zeroed();
+        let string = intern_atom(display, "STRING");
+
+        let name: u64 = intern_atom(display, name);
+        XGetWindowProperty(
+            display,
+            window,
+            name,
+            0,
+            !0,
+            False,
+            string,
+            &mut actual_type,
+            &mut actual_format,
+            &mut n_items,
+            &mut bytes_after,
+            &mut prop);
+
+        if prop.is_null() {
+            None
+        } else {
+            from_cstring(prop as *mut i8)
+        }
+    }
+}
+
+
+pub fn get_window_class(display: *mut Display, window: Window) -> Option<String> {
+    unsafe {
+        let mut class_hint: XClassHint = zeroed();
+
+        if XGetClassHint(display, window, &mut class_hint) == 0 {
+            return None;
+        }
+
+        tap!({
+            if class_hint.res_class.is_null() {
+                None
+            } else {
+                from_cstring(class_hint.res_class)
+            }
+        } => {
+            XFree(class_hint.res_name as *mut c_void);
+            XFree(class_hint.res_class as *mut c_void);
+        })
     }
 }
 
@@ -187,5 +263,12 @@ fn intern_atom(display: *mut Display, name: &str) -> u64 {
     unsafe {
         let cstr = CString::new(name).unwrap();
         XInternAtom(display, cstr.as_ptr(), False)
+    }
+}
+
+
+fn from_cstring(ptr: *mut i8) -> Option<String> {
+    unsafe {
+        CStr::from_ptr(ptr).to_str().map(|it| it.to_string()).ok()
     }
 }

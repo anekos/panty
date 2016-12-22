@@ -19,8 +19,46 @@ pub struct Options {
 }
 
 
+pub struct Instance {
+    pub window: Window,
+    pub servername: String,
+    pub title: String
+}
 
-pub fn send_files(servername: &String, files: Vec<String>) {
+
+pub fn find_visible_instances() -> Vec<Instance> {
+    with_display!(display => {
+        let windows = fetch_all_windows(display);
+        let mut result = vec![];
+
+        for window in windows {
+            debug!("find_visible_gvim_instances: window = {}", window);
+            if window == 0 || !is_window_visible(display, window) {
+                continue;
+            }
+
+            if let Some(class) = get_window_class(display, window) {
+                if class.as_str() == "Gvim" {
+                    if let Some(servername) = get_text_property(display, window, "_PANTY_SERVERNAME") {
+                        if let Some(title) = get_text_property(display, window, "WM_NAME") {
+                            result.push(Instance {
+                                window: window,
+                                servername: servername.clone(),
+                                title: title
+                            });
+                        }
+                    }
+                }
+            }
+        }
+
+        result
+    })
+}
+
+
+
+pub fn send_files(servername: &String, files: Vec<String>, tab: bool) {
     if files.is_empty() {
         return
     }
@@ -28,7 +66,7 @@ pub fn send_files(servername: &String, files: Vec<String>) {
     Command::new("gvim")
         .arg("--servername")
         .arg(servername)
-        .arg("--remote-tab")
+        .arg(if tab {"--remote-tab"} else {"--remote"})
         .args(files.as_slice())
         .spawn().unwrap();
 }
