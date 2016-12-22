@@ -29,6 +29,21 @@ macro_rules! with_display {
 }
 
 
+pub fn set_text_property(display: *mut Display, window: Window, name: &str, value: &str) {
+    unsafe {
+        XChangeProperty(
+            display,
+            window,
+            intern_atom(display, name),
+            intern_atom(display, "STRING"),
+            8,
+            PropModeReplace,
+            value.as_ptr(),
+            value.len() as i32);
+    }
+}
+
+
 pub fn restore_window(display: *mut Display, window: Window) {
     unsafe {
         XMapWindow(display, window);
@@ -91,17 +106,7 @@ pub fn unmap_window(display: *mut Display, window: Window) {
 
 
 pub fn set_window_role(display: *mut Display, window: Window, role: &str) {
-    unsafe {
-        XChangeProperty(
-            display,
-            window,
-            intern_atom(display, "WM_WINDOW_ROLE"),
-            intern_atom(display, "STRING"),
-            8,
-            PropModeReplace,
-            role.as_ptr(),
-            role.len() as i32);
-    }
+    set_text_property(display, window, "WM_WINDOW_ROLE", role);
 }
 
 

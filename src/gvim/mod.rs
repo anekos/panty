@@ -80,11 +80,13 @@ pub fn spawn_secretly(servername: &String, options: &Options) -> Window {
 
         trace!("spawning: {}", wid);
 
-        if options.unmap {
-            while !window_exists(display, wid) {
-                thread::sleep(Duration::from_millis(1));
-            }
+        while !window_exists(display, wid) {
+            thread::sleep(Duration::from_millis(1));
+        }
 
+        set_text_property(display, wid, "_PANTY_SERVERNAME", servername.as_str());
+
+        if options.unmap {
             {
                 let max_tries = 50;
                 let mut tried = 0;
