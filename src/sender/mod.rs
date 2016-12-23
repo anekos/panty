@@ -5,8 +5,12 @@ use gvim;
 
 
 
-pub fn send_files(files: Vec<String>, tab: bool) {
-    let instances = gvim::find_visible_instances();
+pub fn send_files(files: Vec<String>, tab: bool, use_panty: bool) {
+    let instances = if use_panty {
+        gvim::find_visible_instances()
+    } else {
+        gvim::find_visible_instances_without_panty()
+    };
 
     match instances.len() {
         0 => error!("No gVim!"),

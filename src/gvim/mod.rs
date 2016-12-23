@@ -1,4 +1,5 @@
 
+use core::iter::FromIterator;
 use std::collections::HashSet;
 use std::io::BufReader;
 use std::io::prelude::*;
@@ -54,6 +55,61 @@ pub fn find_visible_instances() -> Vec<Instance> {
 
         result
     })
+}
+
+
+fn fetch_window_id(servername: &String) -> Option<Window> {
+    let output: Vec<u8> = Command::new("gvim")
+        .arg("--servername")
+        .arg(servername)
+        .arg("--remote-expr")
+        .arg("v:windowid")
+        .output()
+        .unwrap()
+        .stdout;
+
+    String::from_utf8(output).ok().and_then(|number| number.trim().parse().ok())
+}
+
+
+pub fn find_visible_instances_without_panty() -> Vec<Instance> {
+    let servernames: Vec<String> = fetch_existing_servernames();
+
+    let join_handles: Vec<_> =
+        servernames.iter().map(|servername| {
+            let servername = servername.clone();
+            thread::spawn(move || {
+                with_display!(display => {
+                    if let Some(window) = fetch_window_id(&servername) {
+                        if is_window_visible(display, window) {
+                            if let Some(title) = get_text_property(display, window, "WM_NAME") {
+                                return Some(Instance{
+                                    window: window,
+                                    servername: servername,
+                                    title: title
+                                })
+                            }
+                        }
+                    }
+                    None
+                })
+            })
+        }).collect();
+
+    {
+
+        let mut result = vec![];
+
+        for handle in join_handles {
+            if let Ok(found) = handle.join() {
+                if let Some(instance) = found {
+                    result.push(instance);
+                }
+            }
+        }
+
+        result
+    }
 }
 
 
@@ -149,30 +205,29 @@ pub fn spawn_secretly(servername: &String, options: &Options) -> Window {
 
 
 pub fn new_servernames(windows: usize) -> Vec<String> {
+    let mut result = vec![];
+    let names: HashSet<String> = fetch_existing_servernames();
+
+    loop {
+        let name = namer::name();
+        if !names.contains(&name) {
+            result.push(name);
+            if result.len() >= windows {
+                break;
+            }
+        }
+    }
+
+    result
+}
+
+
+fn fetch_existing_servernames<T>() -> T
+where T: FromIterator<String> {
     let output: Vec<u8> = Command::new("gvim")
         .arg("--serverlist")
         .output()
         .unwrap()
         .stdout;
-
-    String::from_utf8(output).map(|s| -> Vec<String> {
-        let mut result = vec![];
-
-        let mut names = HashSet::new();
-        for name in s.lines() {
-            names.insert(name);
-        }
-
-        loop {
-            let name = namer::name();
-            if !names.contains(&name.as_str()) {
-                result.push(name);
-                if result.len() >= windows {
-                    break;
-                }
-            }
-        }
-
-        result
-    }).unwrap()
+    String::from_utf8(output).unwrap().lines().map(|it| it.to_string()).collect()
 }
