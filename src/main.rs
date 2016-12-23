@@ -103,6 +103,7 @@ fn command_renew(socket_filepath: String) {
 
 fn command_edit(args: Vec<String>, tab: bool) {
     let mut files: Vec<String> = vec![];
+    let mut use_panty: bool = true;
 
     {
         let mut ap = ArgumentParser::new();
@@ -110,11 +111,12 @@ fn command_edit(args: Vec<String>, tab: bool) {
         ap.set_description("Send files to gVim");
 
         ap.refer(&mut files).add_argument("arguments", List, "Files");
+        ap.refer(&mut use_panty).add_option(&["--no-panty"], StoreFalse, "I am no panty user");
 
         ap.parse(args, &mut stdout(), &mut stderr()).map_err(|x| std::process::exit(x)).unwrap();
     }
 
-    sender::send_files(files, tab);
+    sender::send_files(files, tab, use_panty);
 }
 
 
