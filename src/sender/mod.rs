@@ -7,9 +7,9 @@ use gvim;
 
 pub fn send_files(files: Vec<String>, tab: bool, use_panty: bool) {
     let instances = if use_panty {
-        gvim::find_visible_instances()
+        gvim::find_instances(true)
     } else {
-        gvim::find_visible_instances_without_panty()
+        gvim::find_instances_without_panty(true)
     };
 
     match instances.len() {

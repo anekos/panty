@@ -27,14 +27,18 @@ pub struct Instance {
 }
 
 
-pub fn find_visible_instances() -> Vec<Instance> {
+pub const STOCKED_WINDOW_ROLE: &'static str = "STOCKING";
+pub const SUMMONED_WINDOW_ROLE: &'static str = "PANTY";
+
+
+pub fn find_instances(visibility: bool) -> Vec<Instance> {
     with_display!(display => {
         let windows = fetch_all_windows(display);
         let mut result = vec![];
 
         for window in windows {
             debug!("find_visible_gvim_instances: window = {}", window);
-            if window == 0 || !is_window_visible(display, window) {
+            if window == 0 || is_window_visible(display, window) != visibility {
                 continue;
             }
 
@@ -72,7 +76,7 @@ fn fetch_window_id(servername: &String) -> Option<Window> {
 }
 
 
-pub fn find_visible_instances_without_panty() -> Vec<Instance> {
+pub fn find_instances_without_panty(visibility: bool) -> Vec<Instance> {
     let servernames: Vec<String> = fetch_existing_servernames();
 
     let join_handles: Vec<_> =
@@ -81,7 +85,7 @@ pub fn find_visible_instances_without_panty() -> Vec<Instance> {
             thread::spawn(move || {
                 with_display!(display => {
                     if let Some(window) = fetch_window_id(&servername) {
-                        if is_window_visible(display, window) {
+                        if is_window_visible(display, window) == visibility {
                             if let Some(title) = get_text_property(display, window, "WM_NAME") {
                                 return Some(Instance{
                                     window: window,
@@ -133,7 +137,7 @@ pub fn spawn(servername: &String, options: &Options) -> Window {
 
     command.arg("--nofork")
         .arg("--echo-wid")
-        .arg("--role=STOCKING")
+        .arg(format!("--role={}", STOCKED_WINDOW_ROLE))
         .arg("-iconic")
         .arg("--servername")
         .arg(servername);

@@ -19,6 +19,7 @@ enum Command {
     Renew,
     Edit,
     TabEdit,
+    Clean,
 }
 
 impl FromStr for Command {
@@ -35,6 +36,8 @@ impl FromStr for Command {
                 => Ok(Command::Edit),
             "tabedit" | "tedit" | "t"
                 => Ok(Command::TabEdit),
+            "clean"
+                => Ok(Command::Clean),
             _ => Err(()),
         };
     }
@@ -120,6 +123,11 @@ fn command_edit(args: Vec<String>, tab: bool) {
 }
 
 
+fn command_clean() {
+    cleaner::clean();
+}
+
+
 fn main() {
     env_logger::init().unwrap();
 
@@ -153,5 +161,6 @@ fn main() {
         Command::Renew => command_renew(socket_filepath),
         Command::Edit => command_edit(args, false),
         Command::TabEdit => command_edit(args, true),
+        Command::Clean => command_clean(),
     }
 }

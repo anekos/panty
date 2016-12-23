@@ -181,6 +181,11 @@ pub fn unmap_window(display: *mut Display, window: Window) {
 }
 
 
+pub fn get_window_role(display: *mut Display, window: Window) -> Option<String> {
+    get_text_property(display, window, "WM_WINDOW_ROLE")
+}
+
+
 pub fn set_window_role(display: *mut Display, window: Window, role: &str) {
     set_text_property(display, window, "WM_WINDOW_ROLE", role);
 }
