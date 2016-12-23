@@ -1,5 +1,5 @@
 
-use std::collections::LinkedList;
+use std::collections::{LinkedList, HashSet};
 use std::sync::Arc;
 use std::sync::Mutex;
 use std::thread;
@@ -65,4 +65,23 @@ pub fn renew(stocks: Stocks, max_stocks: usize, gvim_options: gvim::Options) {
         });
         collect(stocks, max_stocks, gvim_options);
     });
+}
+
+
+pub fn clean(stocks: Stocks) {
+    let current_stocks: HashSet<Window> = {
+        let stocks = stocks.lock().unwrap();
+        stocks.iter().map(|it| it.window).collect()
+    };
+
+    let instances = gvim::find_instances_without_panty(false);
+    with_display!(display => {
+        let role = Some(gvim::STOCKED_WINDOW_ROLE.to_string());
+        for instance in instances {
+            if !current_stocks.contains(&instance.window) && role == get_window_role(display, instance.window) {
+                println!("kill_window: window = {}, servername = {}", instance.window, instance.servername);
+                kill_window(display, instance.window);
+            }
+        }
+    })
 }

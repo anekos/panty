@@ -30,6 +30,9 @@ pub fn meditate(stocks: collector::Stocks, max_stocks: usize, socket_filepath: S
                             },
                             Renew => {
                                 collector::renew(stocks.clone(), max_stocks, gvim_options);
+                            },
+                            Clean => {
+                                collector::clean(stocks.clone());
                             }
 
                         }

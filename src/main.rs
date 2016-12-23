@@ -123,8 +123,10 @@ fn command_edit(args: Vec<String>, tab: bool) {
 }
 
 
-fn command_clean() {
-    cleaner::clean();
+fn command_clean(socket_filepath: String) {
+    spell::cast(
+        socket_filepath,
+        spell::Spell::Clean);
 }
 
 
@@ -161,6 +163,6 @@ fn main() {
         Command::Renew => command_renew(socket_filepath),
         Command::Edit => command_edit(args, false),
         Command::TabEdit => command_edit(args, true),
-        Command::Clean => command_clean(),
+        Command::Clean => command_clean(socket_filepath),
     }
 }

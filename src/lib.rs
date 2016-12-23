@@ -28,5 +28,4 @@ pub mod summoner;
 pub mod police;
 pub mod executioner;
 pub mod sender;
-pub mod cleaner;
 pub mod app;

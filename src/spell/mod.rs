@@ -7,7 +7,8 @@ use unix_socket::UnixStream;
 #[derive(RustcEncodable, RustcDecodable, Clone, Debug)]
 pub enum Spell {
     Summon {files: Vec<String>, role: Option<String>},
-    Renew
+    Renew,
+    Clean
 }
 
 
