@@ -3,6 +3,8 @@ use std::ffi::{CString, CStr};
 use std::mem::zeroed;
 use std::os::raw::c_void;
 use std::slice;
+use std::thread;
+use std::time;
 use x11::xlib::*;
 
 
@@ -26,6 +28,13 @@ macro_rules! with_display {
 
         }
     };
+}
+
+
+pub fn wait_for_kill(display: *mut Display, window: Window) {
+    while window_exists(display, window) {
+        thread::sleep(time::Duration::from_millis(10));
+    }
 }
 
 

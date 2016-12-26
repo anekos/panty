@@ -3,7 +3,7 @@ extern crate panty;
 extern crate argparse;
 extern crate env_logger;
 
-use argparse::{ArgumentParser, Store, StoreOption, List, Collect, StoreFalse};
+use argparse::{ArgumentParser, Store, StoreOption, List, Collect, StoreFalse, StoreTrue};
 use std::env::home_dir;
 use std::io::{stdout, stderr};
 use std::str::FromStr;
@@ -47,6 +47,7 @@ impl FromStr for Command {
 fn command_summon(socket_filepath: String, args: Vec<String>) {
     let mut role = None;
     let mut command_args: Vec<String> = vec![];
+    let mut nofork: bool = false;
 
     {
         let mut ap = ArgumentParser::new();
@@ -54,6 +55,7 @@ fn command_summon(socket_filepath: String, args: Vec<String>) {
         ap.set_description("Summon gVim window");
 
         ap.refer(&mut role).add_option(&["--role", "-r"], StoreOption, "Set window role");
+        ap.refer(&mut nofork).add_option(&["--nofork", "-n"], StoreTrue, "Emulation gVim's --nofork");
         ap.refer(&mut command_args).add_argument("arguments", List, "Files");
 
         ap.parse(args, &mut stdout(), &mut stderr()).map_err(|x| std::process::exit(x)).unwrap();
@@ -61,7 +63,7 @@ fn command_summon(socket_filepath: String, args: Vec<String>) {
 
     spell::cast(
         socket_filepath,
-        spell::Spell::Summon {files: command_args, role: role});
+        spell::Spell::Summon {files: command_args, role: role, nofork: nofork});
 }
 
 
