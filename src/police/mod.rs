@@ -64,7 +64,7 @@ fn file_patrol(stocks: collector::Stocks, max_stocks: usize, targets: &Vec<PathB
                 ino.add_watch(dir, EVENTS).unwrap()
             });
             let name = target.file_name().unwrap().to_str().unwrap().to_string();
-            table.entry(*wd).or_insert_with(|| HashSet::new()).insert(name);
+            table.entry(*wd).or_insert_with(HashSet::new).insert(name);
         }
     }
 

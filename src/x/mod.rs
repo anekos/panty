@@ -48,7 +48,7 @@ pub fn fetch_all_windows(display: *mut Display) -> Vec<u64> {
         let mut n_children: u32 = 0;
         XQueryTree(display, root, &mut dummy, &mut dummy, &mut p_children, &mut n_children);
 
-        if n_children <= 0 {
+        if n_children == 0 {
             return vec![];
         }
 
@@ -56,7 +56,7 @@ pub fn fetch_all_windows(display: *mut Display) -> Vec<u64> {
 
         XFree(p_children as *mut c_void);
 
-        return children
+        children
     }
 }
 
@@ -157,7 +157,7 @@ pub fn window_exists(display: *mut Display, window: Window) -> bool {
 
         XQueryTree(display, root, &mut dummy, &mut dummy, &mut p_children, &mut n_children);
 
-        if n_children <= 0 {
+        if n_children == 0 {
             return false
         }
 

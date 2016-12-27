@@ -1,5 +1,5 @@
 
-use std::collections::LinkedList;
+use std::collections::VecDeque;
 use std::fs::remove_file;
 use std::path::Path;
 use std::sync::Arc;
@@ -13,7 +13,7 @@ use gvim;
 
 
 pub fn start(max_stocks: usize, socket_filepath: String, watch_targets: Vec<String>, recursive_watch_targets: Vec<String>, gvim_options: gvim::Options) {
-    let stocks: collector::Stocks = Arc::new(Mutex::new(LinkedList::new()));
+    let stocks: collector::Stocks = Arc::new(Mutex::new(VecDeque::new()));
     initialize(&socket_filepath);
     collector::collect(stocks.clone(), max_stocks, gvim_options.clone());
     police::patrol(stocks.clone(), max_stocks, &watch_targets, &recursive_watch_targets, gvim_options.clone());
@@ -22,7 +22,7 @@ pub fn start(max_stocks: usize, socket_filepath: String, watch_targets: Vec<Stri
 }
 
 
-fn initialize(socket_filepath: &String) {
+fn initialize(socket_filepath: &str) {
     if Path::new(&socket_filepath).exists() {
         remove_file(&socket_filepath).expect("Faild: remove socket file");
     }

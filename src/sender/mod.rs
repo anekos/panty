@@ -25,11 +25,8 @@ pub fn send_files(files: Vec<String>, tab: bool, use_panty: bool) {
 }
 
 fn number_prompt<'a>(candidates: &'a Vec<gvim::Instance>) -> Result<&'a String, String> {
-    let mut index = 0;
-
-    for candidate in candidates {
+    for (index, candidate) in candidates.iter().enumerate() {
         println!("[{}] {}", index, candidate.title);
-        index += 1;
     }
 
     let mut buffer = String::new();
