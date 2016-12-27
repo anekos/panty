@@ -114,7 +114,7 @@ fn command_renew(socket_filepath: String) {
 }
 
 
-fn command_edit(args: Vec<String>, tab: bool) {
+fn command_edit(socket_filepath: String, args: Vec<String>, tab: bool) {
     let mut files: Vec<String> = vec![];
     let mut use_panty: bool = true;
 
@@ -129,7 +129,23 @@ fn command_edit(args: Vec<String>, tab: bool) {
         ap.parse(args, &mut stdout(), &mut stderr()).map_err(|x| std::process::exit(x)).unwrap();
     }
 
-    sender::send_files(files, tab, use_panty);
+    let paths: Vec<String> = files.iter().map(|it| to_absolute_path(it)).collect();
+
+    let servername =
+        sender::send_files(files, tab, use_panty).or_else(|| {
+            if use_panty {
+                Some(
+                    spell::cast(
+                        socket_filepath,
+                        spell::Spell::Summon {files: paths, keys: None, role: None, nofork: false}))
+            } else {
+                None
+            }
+        });
+
+    if let Some(servername) = servername {
+        print!("{}", servername)
+    }
 }
 
 
@@ -171,8 +187,8 @@ fn main() {
         Command::Summon => command_summon(socket_filepath, args),
         Command::Collector => command_collector(socket_filepath, args),
         Command::Renew => command_renew(socket_filepath),
-        Command::Edit => command_edit(args, false),
-        Command::TabEdit => command_edit(args, true),
+        Command::Edit => command_edit(socket_filepath, args, false),
+        Command::TabEdit => command_edit(socket_filepath, args, true),
         Command::Clean => command_clean(socket_filepath),
     }
 }

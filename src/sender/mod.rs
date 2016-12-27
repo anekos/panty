@@ -5,22 +5,25 @@ use gvim;
 
 
 
-pub fn send_files(files: Vec<String>, tab: bool, use_panty: bool) {
+pub fn send_files(files: Vec<String>, tab: bool, use_panty: bool) -> Option<String> {
     let instances = if use_panty {
         gvim::find_instances(true)
     } else {
         gvim::find_instances_without_panty(true)
     };
 
-    match instances.len() {
-        0 => error!("No gVim!"),
-        1 => gvim::send_files(&instances[0].servername, files, tab),
-        _ => {
-            match number_prompt(&instances) {
-                Ok(servername) => gvim::send_files(&servername, files, tab),
-                Err(e) => println!("{}", e)
-            }
-        }
+    let servername =
+        match instances.len() {
+            0 => None,
+            1 => Some(instances[0].servername.clone()),
+            _ => number_prompt(&instances).ok()
+        };
+
+    if let Some(servername) = servername {
+        gvim::send_files(&servername, files, tab);
+        Some(servername)
+    } else {
+        None
     }
 }
 
