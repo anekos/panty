@@ -17,14 +17,14 @@ pub fn send_files(files: Vec<String>, tab: bool, use_panty: bool) {
         1 => gvim::send_files(&instances[0].servername, files, tab),
         _ => {
             match number_prompt(&instances) {
-                Ok(servername) => gvim::send_files(servername, files, tab),
+                Ok(servername) => gvim::send_files(&servername, files, tab),
                 Err(e) => println!("{}", e)
             }
         }
     }
 }
 
-fn number_prompt<'a>(candidates: &'a Vec<gvim::Instance>) -> Result<&'a String, String> {
+fn number_prompt(candidates: &[gvim::Instance]) -> Result<String, String> {
     for (index, candidate) in candidates.iter().enumerate() {
         println!("[{}] {}", index, candidate.title);
     }
@@ -35,7 +35,7 @@ fn number_prompt<'a>(candidates: &'a Vec<gvim::Instance>) -> Result<&'a String, 
             .map_err(|it| it.to_string())
             .and_then(|number| {
                 if number < candidates.len() {
-                    Ok(&candidates[number].servername)
+                    Ok(candidates[number].servername.clone())
                 } else {
                     Err("Index out of bounds".to_string())
                 }
