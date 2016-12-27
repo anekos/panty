@@ -23,8 +23,13 @@ pub fn meditate(stocks: collector::Stocks, max_stocks: usize, socket_filepath: S
                 match stream.read_to_string(&mut buf).unwrap() {
                     _ => {
                         match json::decode(buf.as_str()).expect("Fail: json::decode") {
-                            Summon {files, role, nofork} =>
-                                summon(stocks.clone(), files, role, nofork, spawn_options, stream),
+                            Summon {files, keys, role, nofork} =>
+                                summon(
+                                    stocks.clone(),
+                                    summoner::SummonOptions {files: files, role: role, keys: keys},
+                                    spawn_options,
+                                    nofork,
+                                    stream),
                             Renew =>
                                 collector::renew(stocks.clone(), max_stocks, spawn_options),
                             Clean =>
@@ -44,11 +49,11 @@ pub fn meditate(stocks: collector::Stocks, max_stocks: usize, socket_filepath: S
 }
 
 
-fn summon(stocks: collector::Stocks, files: Vec<String>, role: Option<String>, nofork: bool, spawn_options: SpawnOptions, mut stream: UnixStream) {
+fn summon(stocks: collector::Stocks, summon_options: summoner::SummonOptions, spawn_options: SpawnOptions, nofork: bool, mut stream: UnixStream) {
     let stock = collector::emit(stocks.clone());
     let mut stdout_reader = stock.stdout_reader;
     let servername = stock.servername;
-    summoner::summon(servername.clone(), stock.window, files, role);
+    summoner::summon(servername.clone(), stock.window, summon_options);
     collector::collect(stocks.clone(), 1, spawn_options);
     if nofork {
         thread::spawn(move || {

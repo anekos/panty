@@ -49,6 +49,7 @@ impl FromStr for Command {
 fn command_summon(socket_filepath: String, args: Vec<String>) {
     let mut role = None;
     let mut command_args: Vec<String> = vec![];
+    let mut keys: Option<String> = None;
     let mut nofork: bool = false;
 
     {
@@ -58,6 +59,7 @@ fn command_summon(socket_filepath: String, args: Vec<String>) {
 
         ap.refer(&mut role).add_option(&["--role", "-r"], StoreOption, "Set window role");
         ap.refer(&mut nofork).add_option(&["--nofork", "-n"], StoreTrue, "Emulation gVim's --nofork");
+        ap.refer(&mut keys).add_option(&["--send", "-s"], StoreOption, "Send key sequence");
         ap.refer(&mut command_args).add_argument("arguments", List, "Files");
 
         ap.parse(args, &mut stdout(), &mut stderr()).map_err(|x| std::process::exit(x)).unwrap();
@@ -68,7 +70,7 @@ fn command_summon(socket_filepath: String, args: Vec<String>) {
     let servername =
         spell::cast(
             socket_filepath,
-            spell::Spell::Summon {files: paths, role: role, nofork: nofork});
+            spell::Spell::Summon {files: paths, keys: keys, role: role, nofork: nofork});
     print!("{}", servername)
 }
 

@@ -131,6 +131,16 @@ pub fn send_files(servername: &str, files: Vec<String>, tab: bool) {
 }
 
 
+pub fn send_keys(servername: &str, keys: String) {
+    Command::new("gvim")
+        .arg("--servername")
+        .arg(servername)
+        .arg("--remote-send")
+        .arg(keys)
+        .spawn().unwrap();
+}
+
+
 pub fn spawn(servername: &str, options: &SpawnOptions) -> (Window, BufReader<ChildStdout>) {
     let mut command = Command::new(options.command.clone());
 
