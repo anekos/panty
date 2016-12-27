@@ -61,7 +61,7 @@ pub fn find_instances(visibility: bool) -> Vec<Instance> {
 }
 
 
-fn fetch_window_id(servername: &String) -> Option<Window> {
+fn fetch_window_id(servername: &str) -> Option<Window> {
     let output: Vec<u8> = Command::new("gvim")
         .arg("--servername")
         .arg(servername)
@@ -117,7 +117,7 @@ pub fn find_instances_without_panty(visibility: bool) -> Vec<Instance> {
 
 
 
-pub fn send_files(servername: &String, files: Vec<String>, tab: bool) {
+pub fn send_files(servername: &str, files: Vec<String>, tab: bool) {
     if files.is_empty() {
         return
     }
@@ -131,7 +131,7 @@ pub fn send_files(servername: &String, files: Vec<String>, tab: bool) {
 }
 
 
-pub fn spawn(servername: &String, options: &Options) -> (Window, BufReader<ChildStdout>) {
+pub fn spawn(servername: &str, options: &Options) -> (Window, BufReader<ChildStdout>) {
     let mut command = Command::new(options.command.clone());
 
     command.arg("--nofork")
@@ -171,7 +171,7 @@ pub fn spawn(servername: &String, options: &Options) -> (Window, BufReader<Child
 }
 
 
-pub fn spawn_secretly(servername: &String, options: &Options) -> (Window, BufReader<ChildStdout>) {
+pub fn spawn_secretly(servername: &str, options: &Options) -> (Window, BufReader<ChildStdout>) {
     with_display!(display => {
         let (wid, reader) = spawn(servername, options);
 
@@ -181,7 +181,7 @@ pub fn spawn_secretly(servername: &String, options: &Options) -> (Window, BufRea
             thread::sleep(Duration::from_millis(1));
         }
 
-        set_text_property(display, wid, "_PANTY_SERVERNAME", servername.as_str());
+        set_text_property(display, wid, "_PANTY_SERVERNAME", servername);
 
         if options.unmap {
             {

@@ -16,7 +16,7 @@ use gvim;
 const EVENTS: u32 = IN_CREATE | IN_MODIFY | IN_DELETE;
 
 
-pub fn patrol(stocks: collector::Stocks, max_stocks: usize, targets: &Vec<String>, rec_targets: &Vec<String>, gvim_options: gvim::Options) {
+pub fn patrol(stocks: collector::Stocks, max_stocks: usize, targets: &[String], rec_targets: &[String], gvim_options: gvim::Options) {
     let mut files: Vec<PathBuf> = vec![];
     let mut directories: Vec<PathBuf> = vec![];
 
@@ -52,7 +52,7 @@ pub fn patrol(stocks: collector::Stocks, max_stocks: usize, targets: &Vec<String
 }
 
 
-fn file_patrol(stocks: collector::Stocks, max_stocks: usize, targets: &Vec<PathBuf>, gvim_options: gvim::Options) {
+fn file_patrol(stocks: collector::Stocks, max_stocks: usize, targets: &[PathBuf], gvim_options: gvim::Options) {
     let mut ino = INotify::init().unwrap();
     let mut table: HashMap<i32, HashSet<String>> = HashMap::new();
     let mut watched: HashMap<PathBuf, i32> = HashMap::new();
@@ -64,7 +64,7 @@ fn file_patrol(stocks: collector::Stocks, max_stocks: usize, targets: &Vec<PathB
                 ino.add_watch(dir, EVENTS).unwrap()
             });
             let name = target.file_name().unwrap().to_str().unwrap().to_string();
-            table.entry(*wd).or_insert_with(|| HashSet::new()).insert(name);
+            table.entry(*wd).or_insert_with(HashSet::new).insert(name);
         }
     }
 
@@ -85,7 +85,7 @@ fn file_patrol(stocks: collector::Stocks, max_stocks: usize, targets: &Vec<PathB
 }
 
 
-fn directory_patrol(stocks: collector::Stocks, max_stocks: usize, targets: &Vec<PathBuf>, gvim_options: gvim::Options) {
+fn directory_patrol(stocks: collector::Stocks, max_stocks: usize, targets: &[PathBuf], gvim_options: gvim::Options) {
     let mut ino = INotify::init().unwrap();
 
     for target in targets {

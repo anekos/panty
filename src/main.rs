@@ -26,7 +26,7 @@ enum Command {
 impl FromStr for Command {
     type Err = ();
     fn from_str(src: &str) -> Result<Command, ()> {
-        return match src {
+        match src {
             "summon" | "s"
                 => Ok(Command::Summon),
             "collector" | "c"
@@ -40,7 +40,7 @@ impl FromStr for Command {
             "clean"
                 => Ok(Command::Clean),
             _ => Err(()),
-        };
+        }
     }
 }
 
@@ -62,7 +62,7 @@ fn command_summon(socket_filepath: String, args: Vec<String>) {
         ap.parse(args, &mut stdout(), &mut stderr()).map_err(|x| std::process::exit(x)).unwrap();
     }
 
-    let paths: Vec<String> = command_args.iter().map(|it| to_absolute_path(&it)).collect();
+    let paths: Vec<String> = command_args.iter().map(|it| to_absolute_path(it)).collect();
 
     spell::cast(
         socket_filepath,

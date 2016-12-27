@@ -1,5 +1,5 @@
 
-use std::collections::{LinkedList, HashSet};
+use std::collections::{VecDeque, HashSet};
 use std::io::BufReader;
 use std::sync::Arc;
 use std::sync::Mutex;
@@ -17,7 +17,7 @@ pub struct Stock {
 }
 
 
-pub type Stocks = Arc<Mutex<LinkedList<Stock>>>;
+pub type Stocks = Arc<Mutex<VecDeque<Stock>>>;
 
 
 
@@ -41,9 +41,8 @@ pub fn emit(stocks: Stocks) -> Stock {
     loop {
         {
             let mut m_stocks = stocks.lock().unwrap();
-            match m_stocks.pop_front() {
-                Some(stock) => return stock,
-                None => ()
+            if let Some(stock) = m_stocks.pop_front() {
+                return stock
             }
         }
     }
