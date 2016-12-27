@@ -3,7 +3,7 @@ use core::iter::FromIterator;
 use std::collections::HashSet;
 use std::io::BufReader;
 use std::io::prelude::*;
-use std::process::{Command, Stdio};
+use std::process::{Command, Stdio, ChildStdout};
 use std::thread;
 use std::time::Duration;
 use x11::xlib::Window;
@@ -131,7 +131,7 @@ pub fn send_files(servername: &String, files: Vec<String>, tab: bool) {
 }
 
 
-pub fn spawn(servername: &String, options: &Options) -> Window {
+pub fn spawn(servername: &String, options: &Options) -> (Window, BufReader<ChildStdout>) {
     let mut command = Command::new(options.command.clone());
 
     command.arg("--nofork")
@@ -159,7 +159,7 @@ pub fn spawn(servername: &String, options: &Options) -> Window {
             if len > 0 {
                 if let Some(pos) = line.find("WID: ") {
                     let (_, wid) = line.split_at(pos + 5);
-                    return wid.trim().parse().unwrap();
+                    return (wid.trim().parse().unwrap(), reader);
                 }
                 continue;
             }
@@ -171,9 +171,9 @@ pub fn spawn(servername: &String, options: &Options) -> Window {
 }
 
 
-pub fn spawn_secretly(servername: &String, options: &Options) -> Window {
+pub fn spawn_secretly(servername: &String, options: &Options) -> (Window, BufReader<ChildStdout>) {
     with_display!(display => {
-        let wid = spawn(servername, options);
+        let (wid, reader) = spawn(servername, options);
 
         trace!("spawning: {}", wid);
 
@@ -201,7 +201,7 @@ pub fn spawn_secretly(servername: &String, options: &Options) -> Window {
 
         trace!("spawned: {}", wid);
 
-        wid
+        (wid, reader)
     })
 }
 
