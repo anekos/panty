@@ -4,8 +4,9 @@ extern crate argparse;
 extern crate env_logger;
 
 use argparse::{ArgumentParser, Store, StoreOption, List, Collect, StoreFalse, StoreTrue};
-use std::env::home_dir;
+use std::env::{home_dir, current_dir};
 use std::io::{stdout, stderr};
+use std::path::PathBuf;
 use std::str::FromStr;
 
 use panty::*;
@@ -61,9 +62,11 @@ fn command_summon(socket_filepath: String, args: Vec<String>) {
         ap.parse(args, &mut stdout(), &mut stderr()).map_err(|x| std::process::exit(x)).unwrap();
     }
 
+    let paths: Vec<String> = command_args.iter().map(|it| to_absolute_path(&it)).collect();
+
     spell::cast(
         socket_filepath,
-        spell::Spell::Summon {files: command_args, role: role, nofork: nofork});
+        spell::Spell::Summon {files: paths, role: role, nofork: nofork});
 }
 
 
@@ -166,5 +169,17 @@ fn main() {
         Command::Edit => command_edit(args, false),
         Command::TabEdit => command_edit(args, true),
         Command::Clean => command_clean(socket_filepath),
+    }
+}
+
+
+fn to_absolute_path(path: &str) -> String {
+    let buf = PathBuf::from(path);
+    if buf.is_absolute() {
+        buf.to_str().unwrap().to_string()
+    } else {
+        let mut cwd = current_dir().unwrap();
+        cwd.push(buf);
+        cwd.to_str().unwrap().to_string()
     }
 }
