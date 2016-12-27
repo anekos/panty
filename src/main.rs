@@ -10,6 +10,7 @@ use std::path::PathBuf;
 use std::str::FromStr;
 
 use panty::*;
+use panty::gvim::SpawnOptions;
 
 
 
@@ -100,7 +101,7 @@ fn command_collector(socket_filepath: String, args: Vec<String>) {
         socket_filepath,
         watch_targets,
         recursive_watch_targets,
-        gvim::Options {current_directory: current_directory, command: gvim_command, unmap: unmap});
+        SpawnOptions {current_directory: current_directory, command: gvim_command, unmap: unmap});
 }
 
 

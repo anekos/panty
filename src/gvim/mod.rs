@@ -12,7 +12,7 @@ use namer;
 
 
 #[derive(Clone)]
-pub struct Options {
+pub struct SpawnOptions {
     pub current_directory: Option<String>,
     pub command: String,
     pub unmap: bool
@@ -131,7 +131,7 @@ pub fn send_files(servername: &str, files: Vec<String>, tab: bool) {
 }
 
 
-pub fn spawn(servername: &str, options: &Options) -> (Window, BufReader<ChildStdout>) {
+pub fn spawn(servername: &str, options: &SpawnOptions) -> (Window, BufReader<ChildStdout>) {
     let mut command = Command::new(options.command.clone());
 
     command.arg("--nofork")
@@ -171,7 +171,7 @@ pub fn spawn(servername: &str, options: &Options) -> (Window, BufReader<ChildStd
 }
 
 
-pub fn spawn_secretly(servername: &str, options: &Options) -> (Window, BufReader<ChildStdout>) {
+pub fn spawn_secretly(servername: &str, options: &SpawnOptions) -> (Window, BufReader<ChildStdout>) {
     with_display!(display => {
         let (wid, reader) = spawn(servername, options);
 

@@ -8,6 +8,7 @@ use std::process::ChildStdout;
 use x11::xlib::Window;
 
 use gvim;
+use gvim::SpawnOptions;
 
 
 pub struct Stock {
@@ -21,13 +22,13 @@ pub type Stocks = Arc<Mutex<VecDeque<Stock>>>;
 
 
 
-pub fn collect(stocks: Stocks, n: usize, gvim_options: gvim::Options) {
+pub fn collect(stocks: Stocks, n: usize, spawn_options: SpawnOptions) {
     let names = gvim::new_servernames(n);
     for servername in names {
         let stocks = stocks.clone();
-        let gvim_options = gvim_options.clone();
+        let spawn_options = spawn_options.clone();
         thread::spawn(move || {
-            let (window, stdout) = gvim::spawn_secretly(&servername, &gvim_options);
+            let (window, stdout) = gvim::spawn_secretly(&servername, &spawn_options);
             {
                 let mut stocks = stocks.lock().unwrap();
                 stocks.push_back(Stock {window: window, servername: servername, stdout_reader: stdout});
@@ -49,13 +50,13 @@ pub fn emit(stocks: Stocks) -> Stock {
 }
 
 
-pub fn renew(stocks: Stocks, max_stocks: usize, gvim_options: gvim::Options) {
+pub fn renew(stocks: Stocks, max_stocks: usize, spawn_options: SpawnOptions) {
     let killees: Vec<Window> = {
         let mut stocks = stocks.lock().unwrap();
         tap!(stocks.iter().map(|it| it.window).collect() => stocks.clear())
     };
 
-    let gvim_options = gvim_options.clone();
+    let spawn_options = spawn_options.clone();
 
     thread::spawn(move || {
         with_display!(display => {
@@ -64,7 +65,7 @@ pub fn renew(stocks: Stocks, max_stocks: usize, gvim_options: gvim::Options) {
                 kill_window(display, killee);
             }
         });
-        collect(stocks, max_stocks, gvim_options);
+        collect(stocks, max_stocks, spawn_options);
     });
 }
 

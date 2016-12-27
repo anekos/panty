@@ -9,14 +9,14 @@ use std::thread;
 use walkdir::WalkDir;
 
 use collector;
-use gvim;
+use gvim::SpawnOptions;
 
 
 
 const EVENTS: u32 = IN_CREATE | IN_MODIFY | IN_DELETE;
 
 
-pub fn patrol(stocks: collector::Stocks, max_stocks: usize, targets: &[String], rec_targets: &[String], gvim_options: gvim::Options) {
+pub fn patrol(stocks: collector::Stocks, max_stocks: usize, targets: &[String], rec_targets: &[String], spawn_options: SpawnOptions) {
     let mut files: Vec<PathBuf> = vec![];
     let mut directories: Vec<PathBuf> = vec![];
 
@@ -41,18 +41,18 @@ pub fn patrol(stocks: collector::Stocks, max_stocks: usize, targets: &[String], 
 
     {
         let stocks = stocks.clone();
-        let gvim_options = gvim_options.clone();
-        thread::spawn(move || file_patrol(stocks, max_stocks, &files, gvim_options));
+        let spawn_options = spawn_options.clone();
+        thread::spawn(move || file_patrol(stocks, max_stocks, &files, spawn_options));
     }
     {
         let stocks = stocks.clone();
-        let gvim_options = gvim_options.clone();
-        thread::spawn(move || directory_patrol(stocks, max_stocks, &directories, gvim_options));
+        let spawn_options = spawn_options.clone();
+        thread::spawn(move || directory_patrol(stocks, max_stocks, &directories, spawn_options));
     }
 }
 
 
-fn file_patrol(stocks: collector::Stocks, max_stocks: usize, targets: &[PathBuf], gvim_options: gvim::Options) {
+fn file_patrol(stocks: collector::Stocks, max_stocks: usize, targets: &[PathBuf], spawn_options: SpawnOptions) {
     let mut ino = INotify::init().unwrap();
     let mut table: HashMap<i32, HashSet<String>> = HashMap::new();
     let mut watched: HashMap<PathBuf, i32> = HashMap::new();
@@ -76,7 +76,7 @@ fn file_patrol(stocks: collector::Stocks, max_stocks: usize, targets: &[PathBuf]
                 if let Some(set) = table.get(&event.wd) {
                     if set.contains(event.name.to_str().unwrap()) {
                         trace!("file_changes: name = {}, wd = {}", event.name.to_str().unwrap(), event.wd);
-                        collector::renew(stocks.clone(), max_stocks, gvim_options.clone())
+                        collector::renew(stocks.clone(), max_stocks, spawn_options.clone())
                     }
                 }
             }
@@ -85,7 +85,7 @@ fn file_patrol(stocks: collector::Stocks, max_stocks: usize, targets: &[PathBuf]
 }
 
 
-fn directory_patrol(stocks: collector::Stocks, max_stocks: usize, targets: &[PathBuf], gvim_options: gvim::Options) {
+fn directory_patrol(stocks: collector::Stocks, max_stocks: usize, targets: &[PathBuf], spawn_options: SpawnOptions) {
     let mut ino = INotify::init().unwrap();
 
     for target in targets {
@@ -99,7 +99,7 @@ fn directory_patrol(stocks: collector::Stocks, max_stocks: usize, targets: &[Pat
         for event in events.iter() {
             if !event.is_dir() {
                 trace!("file_changes: {}", event.name.to_str().unwrap());
-                collector::renew(stocks.clone(), max_stocks, gvim_options.clone())
+                collector::renew(stocks.clone(), max_stocks, spawn_options.clone())
             }
         }
     }

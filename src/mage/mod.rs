@@ -7,15 +7,15 @@ use std::thread;
 use summoner;
 use collector;
 use spell::Spell::*;
-use gvim;
+use gvim::SpawnOptions;
 
 
 
-pub fn meditate(stocks: collector::Stocks, max_stocks: usize, socket_filepath: String, gvim_options: gvim::Options) {
+pub fn meditate(stocks: collector::Stocks, max_stocks: usize, socket_filepath: String, spawn_options: SpawnOptions) {
     let listener = UnixListener::bind(socket_filepath).unwrap();
 
     for stream in listener.incoming() {
-        let gvim_options = gvim_options.clone();
+        let spawn_options = spawn_options.clone();
 
         match stream {
             Ok(mut stream) => {
@@ -24,9 +24,9 @@ pub fn meditate(stocks: collector::Stocks, max_stocks: usize, socket_filepath: S
                     _ => {
                         match json::decode(buf.as_str()).expect("Fail: json::decode") {
                             Summon {files, role, nofork} =>
-                                summon(stocks.clone(), files, role, nofork, gvim_options, stream),
+                                summon(stocks.clone(), files, role, nofork, spawn_options, stream),
                             Renew =>
-                                collector::renew(stocks.clone(), max_stocks, gvim_options),
+                                collector::renew(stocks.clone(), max_stocks, spawn_options),
                             Clean =>
                                 collector::clean(stocks.clone())
                         }
@@ -44,12 +44,12 @@ pub fn meditate(stocks: collector::Stocks, max_stocks: usize, socket_filepath: S
 }
 
 
-fn summon(stocks: collector::Stocks, files: Vec<String>, role: Option<String>, nofork: bool, gvim_options: gvim::Options, mut stream: UnixStream) {
+fn summon(stocks: collector::Stocks, files: Vec<String>, role: Option<String>, nofork: bool, spawn_options: SpawnOptions, mut stream: UnixStream) {
     let stock = collector::emit(stocks.clone());
     let mut stdout_reader = stock.stdout_reader;
     let servername = stock.servername;
     summoner::summon(servername.clone(), stock.window, files, role);
-    collector::collect(stocks.clone(), 1, gvim_options);
+    collector::collect(stocks.clone(), 1, spawn_options);
     if nofork {
         thread::spawn(move || {
             let mut output = String::new();
