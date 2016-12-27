@@ -64,9 +64,11 @@ fn command_summon(socket_filepath: String, args: Vec<String>) {
 
     let paths: Vec<String> = command_args.iter().map(|it| to_absolute_path(it)).collect();
 
-    spell::cast(
-        socket_filepath,
-        spell::Spell::Summon {files: paths, role: role, nofork: nofork});
+    let servername =
+        spell::cast(
+            socket_filepath,
+            spell::Spell::Summon {files: paths, role: role, nofork: nofork});
+    println!("{}", servername)
 }
 
 

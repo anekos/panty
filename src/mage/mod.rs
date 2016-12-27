@@ -47,16 +47,17 @@ pub fn meditate(stocks: collector::Stocks, max_stocks: usize, socket_filepath: S
 fn summon(stocks: collector::Stocks, files: Vec<String>, role: Option<String>, nofork: bool, gvim_options: gvim::Options, mut stream: UnixStream) {
     let stock = collector::emit(stocks.clone());
     let mut stdout_reader = stock.stdout_reader;
-    summoner::summon(stock.servername, stock.window, files, role);
+    let servername = stock.servername;
+    summoner::summon(servername.clone(), stock.window, files, role);
     collector::collect(stocks.clone(), 1, gvim_options);
     if nofork {
         thread::spawn(move || {
             let mut output = String::new();
             stdout_reader.read_to_string(&mut output).unwrap();
             debug!("gVim output: {}", output);
-            stream.write_fmt(format_args!("OK\n")).unwrap();
+            stream.write_fmt(format_args!("{}\n", servername)).unwrap();
         });
     } else {
-        stream.write_fmt(format_args!("OK\n")).unwrap();
+        stream.write_fmt(format_args!("{}\n", servername)).unwrap();
     }
 }
