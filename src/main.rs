@@ -68,7 +68,7 @@ fn command_summon(socket_filepath: String, args: Vec<String>) {
         spell::cast(
             socket_filepath,
             spell::Spell::Summon {files: paths, role: role, nofork: nofork});
-    println!("{}", servername)
+    print!("{}", servername)
 }
 
 
