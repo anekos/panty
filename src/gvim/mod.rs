@@ -209,12 +209,13 @@ pub fn spawn_secretly(servername: &String, options: &Options) -> Window {
 
 pub fn new_servernames(windows: usize) -> Vec<String> {
     let mut result = vec![];
-    let names: HashSet<String> = fetch_existing_servernames();
+    let mut names: HashSet<String> = fetch_existing_servernames();
 
     loop {
         let name = namer::name();
         if !names.contains(&name) {
-            result.push(name);
+            result.push(name.clone());
+            names.insert(name);
             if result.len() >= windows {
                 break;
             }
