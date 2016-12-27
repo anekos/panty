@@ -194,7 +194,6 @@ pub fn spawn_secretly(servername: &String, options: &Options) -> Window {
                 }
 
                 if tried < max_tries {
-                    // TODO?? set_desktop_for_window(display, wid, 5);
                     unmap_window(display, wid);
                 }
             }
