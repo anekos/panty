@@ -26,12 +26,14 @@ pub fn meditate(stocks: collector::Stocks, max_stocks: usize, socket_filepath: S
                         match json::decode(buf.as_str()).expect("Fail: json::decode") {
                             Summon {files, role, nofork} => {
                                 let stock = collector::emit(stocks.clone());
-                                let window = stock.window;
+                                let mut stdout_reader = stock.stdout_reader;
                                 summoner::summon(stock.servername, stock.window, files, role);
                                 collector::collect(stocks.clone(), 1, gvim_options);
                                 if nofork {
                                     thread::spawn(move || {
-                                        with_display!(display => wait_for_kill(display, window));
+                                        let mut output = String::new();
+                                        stdout_reader.read_to_string(&mut output).unwrap();
+                                        debug!("gVim output: {}", output);
                                         stream.write_fmt(format_args!("OK\n")).unwrap();
                                     });
                                 } else {

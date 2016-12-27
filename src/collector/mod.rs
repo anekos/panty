@@ -1,17 +1,19 @@
 
 use std::collections::{LinkedList, HashSet};
+use std::io::BufReader;
 use std::sync::Arc;
 use std::sync::Mutex;
 use std::thread;
+use std::process::ChildStdout;
 use x11::xlib::Window;
 
 use gvim;
 
 
-#[derive(Clone)]
 pub struct Stock {
     pub window: Window,
-    pub servername: String
+    pub servername: String,
+    pub stdout_reader: BufReader<ChildStdout>
 }
 
 
@@ -25,10 +27,10 @@ pub fn collect(stocks: Stocks, n: usize, gvim_options: gvim::Options) {
         let stocks = stocks.clone();
         let gvim_options = gvim_options.clone();
         thread::spawn(move || {
-            let window = gvim::spawn_secretly(&servername, &gvim_options);
+            let (window, stdout) = gvim::spawn_secretly(&servername, &gvim_options);
             {
                 let mut stocks = stocks.lock().unwrap();
-                stocks.push_back(Stock {window: window, servername: servername});
+                stocks.push_back(Stock {window: window, servername: servername, stdout_reader: stdout});
             }
         });
     }
@@ -49,9 +51,9 @@ pub fn emit(stocks: Stocks) -> Stock {
 
 
 pub fn renew(stocks: Stocks, max_stocks: usize, gvim_options: gvim::Options) {
-    let killees = {
+    let killees: Vec<Window> = {
         let mut stocks = stocks.lock().unwrap();
-        tap!((*stocks).clone() => stocks.clear())
+        tap!(stocks.iter().map(|it| it.window).collect() => stocks.clear())
     };
 
     let gvim_options = gvim_options.clone();
@@ -59,8 +61,8 @@ pub fn renew(stocks: Stocks, max_stocks: usize, gvim_options: gvim::Options) {
     thread::spawn(move || {
         with_display!(display => {
             for killee in killees {
-                trace!("kill: {}", killee.servername);
-                kill_window(display, killee.window);
+                trace!("kill: window = {}", killee);
+                kill_window(display, killee);
             }
         });
         collect(stocks, max_stocks, gvim_options);
