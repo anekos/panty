@@ -1,6 +1,6 @@
 [package]
 name = "panty"
-version = "0.4.0"
+version = "0.5.0"
 authors = ["anekos <anekos@snca.net>"]
 repository = "https://github.com/anekos/panty"
 keywords = ["vim", "gvim", "linux"]
