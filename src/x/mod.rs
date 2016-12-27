@@ -1,4 +1,6 @@
 
+#![cfg_attr(feature = "cargo-clippy", allow(not_unsafe_ptr_arg_deref))]
+
 use std::ffi::{CString, CStr};
 use std::mem::zeroed;
 use std::os::raw::c_void;
