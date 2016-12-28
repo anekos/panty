@@ -9,10 +9,8 @@ use collector::Stocks;
 
 #[derive(PartialEq,Eq,Hash,Clone)]
 pub enum Condition {
-    Visible,
-    Invisible,
-    Stocked,
-    Summoned
+    Visible(bool),
+    Stocked(bool)
 }
 
 
@@ -22,11 +20,11 @@ pub fn parse_condition(s: &str) -> Result<HashSet<Condition>, String> {
     let mut set: HashSet<Condition> = HashSet::new();
 
     for term in s.split_terminator(',') {
+        let invert = term.starts_with("!");
+        let term: &str = if invert { &term[1..] } else { term };
         match term {
-            "visible" => set.insert(Visible),
-            "invisible" => set.insert(Invisible),
-            "stocked" => set.insert(Stocked),
-            "summoned" => set.insert(Summoned),
+            "visible" => set.insert(Visible(invert)),
+            "stocked" => set.insert(Stocked(invert)),
             invalid => return Err(format!("Invalid target: {}", invalid))
         };
     }
@@ -83,10 +81,8 @@ fn condition_match(stocks: Option<Stocks>, conditions: HashSet<Condition>, serve
             let mut matched = true;
             for condition in conditions {
                 let m = match condition {
-                    Visible => is_window_visible(display, window),
-                    Invisible => !is_window_visible(display, window),
-                    Stocked => stocked_servers.contains(&*servername),
-                    Summoned => false, // TODO
+                    Visible(invert) => invert != is_window_visible(display, window),
+                    Stocked(invert) => invert != stocked_servers.contains(&*servername),
                 };
                 if !m {
                     matched = false;
