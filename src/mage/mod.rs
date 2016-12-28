@@ -11,7 +11,7 @@ use gvim::SpawnOptions;
 
 
 
-pub fn meditate(stocks: collector::Stocks, max_stocks: usize, socket_filepath: String, spawn_options: SpawnOptions) {
+pub fn meditate(stocks: collector::Stocks, max_stocks: usize, socket_filepath: &str, spawn_options: SpawnOptions) {
     let listener = UnixListener::bind(socket_filepath).unwrap();
 
     for stream in listener.incoming() {

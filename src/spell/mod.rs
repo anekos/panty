@@ -13,7 +13,7 @@ pub enum Spell {
 }
 
 
-pub fn cast(socket_filepath: String, spell: Spell) -> String {
+pub fn cast(socket_filepath: &str, spell: Spell) -> String {
     let mut stream = UnixStream::connect(socket_filepath).unwrap();
 
     stream.write_all(json::encode(&spell).expect("Fail: json::encode").as_bytes()).unwrap();

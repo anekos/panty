@@ -46,7 +46,8 @@ impl FromStr for Command {
 }
 
 
-fn command_summon(socket_filepath: String, args: Vec<String>) {
+fn command_summon(socket_filepath: &str, args: Vec<String>) {
+
     let mut role = None;
     let mut command_args: Vec<String> = vec![];
     let mut keys: Option<String> = None;
@@ -75,7 +76,7 @@ fn command_summon(socket_filepath: String, args: Vec<String>) {
 }
 
 
-fn command_collector(socket_filepath: String, args: Vec<String>) {
+fn command_collector(socket_filepath: &str, args: Vec<String>) {
     let mut max_stocks = 1;
     let mut watch_targets: Vec<String> = vec![];
     let mut recursive_watch_targets: Vec<String> = vec![];
@@ -107,14 +108,14 @@ fn command_collector(socket_filepath: String, args: Vec<String>) {
 }
 
 
-fn command_renew(socket_filepath: String) {
+fn command_renew(socket_filepath: &str) {
     spell::cast(
         socket_filepath,
         spell::Spell::Renew);
 }
 
 
-fn command_edit(socket_filepath: String, args: Vec<String>, tab: bool) {
+fn command_edit(socket_filepath: &str, args: Vec<String>, tab: bool) {
     let mut files: Vec<String> = vec![];
     let mut use_panty: bool = true;
 
@@ -149,7 +150,7 @@ fn command_edit(socket_filepath: String, args: Vec<String>, tab: bool) {
 }
 
 
-fn command_clean(socket_filepath: String) {
+fn command_clean(socket_filepath: &str) {
     spell::cast(
         socket_filepath,
         spell::Spell::Clean);
@@ -182,6 +183,8 @@ fn main() {
     }
 
     args.insert(0, format!("command {:?}", command));
+
+    let socket_filepath = socket_filepath.as_str();
 
     match command {
         Command::Summon => command_summon(socket_filepath, args),
