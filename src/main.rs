@@ -3,7 +3,7 @@ extern crate panty;
 extern crate argparse;
 extern crate env_logger;
 
-use argparse::{ArgumentParser, Store, StoreOption, List, Collect, StoreFalse, StoreTrue};
+use argparse::{ArgumentParser, Store, StoreOption, List, Collect, StoreFalse, StoreTrue, Print};
 use std::env::{home_dir, current_dir};
 use std::io::{stdout, stderr};
 use std::path::PathBuf;
@@ -177,6 +177,8 @@ fn main() {
 
         ap.refer(&mut command).required().add_argument("command", Store, "summon|collector|renew|edit|tabedit");
         ap.refer(&mut args).add_argument("arguments", List, "Arguments for command");
+
+        ap.add_option(&["-V", "--version"], Print(env!("CARGO_PKG_VERSION").to_string()), "Show version");
 
         ap.stop_on_first_argument(true);
         ap.parse_args_or_exit();
