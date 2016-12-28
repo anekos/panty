@@ -61,7 +61,7 @@ pub fn find_instances(visibility: bool) -> Vec<Instance> {
 }
 
 
-fn fetch_window_id(servername: &str) -> Option<Window> {
+pub fn fetch_window_id(servername: &str) -> Option<Window> {
     let output: Vec<u8> = Command::new("gvim")
         .arg("--servername")
         .arg(servername)
@@ -244,7 +244,7 @@ pub fn new_servernames(windows: usize) -> Vec<String> {
 }
 
 
-fn fetch_existing_servernames<T>() -> T
+pub fn fetch_existing_servernames<T>() -> T
 where T: FromIterator<String> {
     let output: Vec<u8> = Command::new("gvim")
         .arg("--serverlist")
