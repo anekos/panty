@@ -6,7 +6,8 @@ extern crate log;
 extern crate env_logger;
 
 use argparse::{ArgumentParser, Store, StoreOption, List, Collect, StoreFalse, StoreTrue};
-use std::env::{home_dir, current_dir};
+use std::env::home_dir;
+use std::fs;
 use std::io::{stdout, stderr};
 use std::path::PathBuf;
 use std::str::FromStr;
@@ -54,7 +55,7 @@ impl FromStr for Command {
 fn command_summon(socket_filepath: &str, args: Vec<String>) {
 
     let mut role = None;
-    let mut command_args: Vec<String> = vec![];
+    let mut files: Vec<String> = vec![];
     let mut keys: Vec<String> = vec![];
     let mut expressions: Vec<String> = vec![];
     let mut nofork: bool = false;
@@ -68,17 +69,18 @@ fn command_summon(socket_filepath: &str, args: Vec<String>) {
         ap.refer(&mut nofork).add_option(&["--nofork", "-n"], StoreTrue, "Emulation gVim's --nofork");
         ap.refer(&mut keys).add_option(&["--send", "-s"], Collect, "Send key sequence");
         ap.refer(&mut expressions).add_option(&["--expr", "-e"], Collect, "Evaluate the expression");
-        ap.refer(&mut command_args).add_argument("arguments", List, "Files");
+        ap.refer(&mut files).add_argument("arguments", List, "Files");
 
         ap.parse(args, &mut stdout(), &mut stderr()).map_err(|x| std::process::exit(x)).unwrap();
     }
 
-    let paths: Vec<String> = command_args.iter().map(|it| to_absolute_path(it)).collect();
+    let files: Vec<String> = files.iter().map(|it| to_absolute_path(it)).collect();
+
 
     let servername =
         spell::cast(
             socket_filepath,
-            spell::Spell::Summon {files: paths, keys: keys, expressions: expressions, role: role, nofork: nofork});
+            spell::Spell::Summon {files: files, keys: keys, expressions: expressions, role: role, nofork: nofork});
     print!("{}", servername)
 }
 
@@ -137,15 +139,15 @@ fn command_edit(socket_filepath: &str, args: Vec<String>, tab: bool) {
         ap.parse(args, &mut stdout(), &mut stderr()).map_err(|x| std::process::exit(x)).unwrap();
     }
 
-    let paths: Vec<String> = files.iter().map(|it| to_absolute_path(it)).collect();
+    let files: Vec<String> = files.iter().map(|it| to_absolute_path(it)).collect();
 
     let servername =
-        sender::send_files(files, tab, use_panty).or_else(|| {
+        sender::send_files(files.clone(), tab, use_panty).or_else(|| {
             if use_panty {
                 Some(
                     spell::cast(
                         socket_filepath,
-                        spell::Spell::Summon {files: paths, keys: vec![], expressions: vec![], role: None, nofork: false}))
+                        spell::Spell::Summon {files: files, keys: vec![], expressions: vec![], role: None, nofork: false}))
             } else {
                 None
             }
@@ -228,11 +230,5 @@ fn main() {
 
 fn to_absolute_path(path: &str) -> String {
     let buf = PathBuf::from(path);
-    if buf.is_absolute() {
-        buf.to_str().unwrap().to_string()
-    } else {
-        let mut cwd = current_dir().unwrap();
-        cwd.push(buf);
-        cwd.to_str().unwrap().to_string()
-    }
+    fs::canonicalize(buf).map(|it| it.to_str().unwrap().to_string()).unwrap_or(path.to_owned())
 }
