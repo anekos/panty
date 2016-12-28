@@ -7,6 +7,7 @@ use std::thread;
 use summoner;
 use collector;
 use spell::Spell::*;
+use gvim;
 use gvim::SpawnOptions;
 
 
@@ -23,13 +24,15 @@ pub fn meditate(stocks: collector::Stocks, max_stocks: usize, socket_filepath: &
                 match stream.read_to_string(&mut buf).unwrap() {
                     _ => {
                         match json::decode(buf.as_str()).expect("Fail: json::decode") {
-                            Summon {files, keys, role, nofork} =>
+                            Summon {files, keys, expressions, role, nofork} =>
                                 summon(
                                     stocks.clone(),
-                                    summoner::SummonOptions {files: files, role: role, keys: keys},
+                                    summoner::SummonOptions {files: files, role: role, keys: keys, expressions: expressions},
                                     spawn_options,
                                     nofork,
                                     stream),
+                            Broadcast {keys, expressions} =>
+                                broadcast(stocks.clone(), keys, expressions),
                             Renew =>
                                 collector::renew(stocks.clone(), max_stocks, spawn_options),
                             Clean =>
@@ -64,5 +67,14 @@ fn summon(stocks: collector::Stocks, summon_options: summoner::SummonOptions, sp
         });
     } else {
         stream.write_fmt(format_args!("{}\n", servername)).unwrap();
+    }
+}
+
+
+fn broadcast(stocks: collector::Stocks, keys: Vec<String>, expressions: Vec<String>) {
+    let m_stocks = stocks.lock().unwrap();
+    let servernames = m_stocks.iter().map(|it| it.servername.clone());
+    for servername in servernames {
+        gvim::remote(&servername, &keys, &expressions);
     }
 }

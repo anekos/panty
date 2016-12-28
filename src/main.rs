@@ -1,6 +1,8 @@
 
 extern crate panty;
 extern crate argparse;
+#[macro_use]
+extern crate log;
 extern crate env_logger;
 
 use argparse::{ArgumentParser, Store, StoreOption, List, Collect, StoreFalse, StoreTrue};
@@ -22,6 +24,7 @@ enum Command {
     Edit,
     TabEdit,
     Clean,
+    Broadcast,
 }
 
 impl FromStr for Command {
@@ -40,6 +43,8 @@ impl FromStr for Command {
                 => Ok(Command::TabEdit),
             "clean"
                 => Ok(Command::Clean),
+            "broadcast"
+                => Ok(Command::Broadcast),
             _ => Err(()),
         }
     }
@@ -50,7 +55,8 @@ fn command_summon(socket_filepath: &str, args: Vec<String>) {
 
     let mut role = None;
     let mut command_args: Vec<String> = vec![];
-    let mut keys: Option<String> = None;
+    let mut keys: Vec<String> = vec![];
+    let mut expressions: Vec<String> = vec![];
     let mut nofork: bool = false;
 
     {
@@ -60,7 +66,8 @@ fn command_summon(socket_filepath: &str, args: Vec<String>) {
 
         ap.refer(&mut role).add_option(&["--role", "-r"], StoreOption, "Set window role");
         ap.refer(&mut nofork).add_option(&["--nofork", "-n"], StoreTrue, "Emulation gVim's --nofork");
-        ap.refer(&mut keys).add_option(&["--send", "-s"], StoreOption, "Send key sequence");
+        ap.refer(&mut keys).add_option(&["--send", "-s"], Collect, "Send key sequence");
+        ap.refer(&mut expressions).add_option(&["--expr", "-e"], Collect, "Evaluate the expression");
         ap.refer(&mut command_args).add_argument("arguments", List, "Files");
 
         ap.parse(args, &mut stdout(), &mut stderr()).map_err(|x| std::process::exit(x)).unwrap();
@@ -71,7 +78,7 @@ fn command_summon(socket_filepath: &str, args: Vec<String>) {
     let servername =
         spell::cast(
             socket_filepath,
-            spell::Spell::Summon {files: paths, keys: keys, role: role, nofork: nofork});
+            spell::Spell::Summon {files: paths, keys: keys, expressions: expressions, role: role, nofork: nofork});
     print!("{}", servername)
 }
 
@@ -138,7 +145,7 @@ fn command_edit(socket_filepath: &str, args: Vec<String>, tab: bool) {
                 Some(
                     spell::cast(
                         socket_filepath,
-                        spell::Spell::Summon {files: paths, keys: None, role: None, nofork: false}))
+                        spell::Spell::Summon {files: paths, keys: vec![], expressions: vec![], role: None, nofork: false}))
             } else {
                 None
             }
@@ -154,6 +161,27 @@ fn command_clean(socket_filepath: &str) {
     spell::cast(
         socket_filepath,
         spell::Spell::Clean);
+}
+
+
+fn command_broadcast(socket_filepath: &str, args: Vec<String>) {
+    let mut keys: Vec<String> = vec![];
+    let mut expressions: Vec<String> = vec![];
+
+    {
+        let mut ap = ArgumentParser::new();
+
+        ap.set_description("Broadcast --remote-send or --remote-expr");
+
+        ap.refer(&mut keys).add_option(&["--send", "-s"], Collect, "Send key sequence");
+        ap.refer(&mut expressions).add_option(&["--expr", "-e"], Collect, "Evaluate the expression");
+
+        ap.parse(args, &mut stdout(), &mut stderr()).map_err(|x| std::process::exit(x)).unwrap();
+    }
+
+    spell::cast(
+        socket_filepath,
+        spell::Spell::Broadcast {keys: keys, expressions: expressions});
 }
 
 
@@ -193,6 +221,7 @@ fn main() {
         Command::Edit => command_edit(socket_filepath, args, false),
         Command::TabEdit => command_edit(socket_filepath, args, true),
         Command::Clean => command_clean(socket_filepath),
+        Command::Broadcast => command_broadcast(socket_filepath, args),
     }
 }
 

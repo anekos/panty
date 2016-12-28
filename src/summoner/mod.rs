@@ -6,7 +6,8 @@ use gvim;
 
 pub struct SummonOptions {
     pub files: Vec<String>,
-    pub keys: Option<String>,
+    pub keys: Vec<String>,
+    pub expressions: Vec<String>,
     pub role: Option<String>
 }
 
@@ -28,9 +29,6 @@ pub fn summon(servername: String, window: Window, options: SummonOptions) {
         }
 
          gvim::send_files(&servername, options.files, false);
-
-         if let Some(keys) = options.keys {
-             gvim::send_keys(&servername, keys);
-         }
+         gvim::remote(&servername, &options.keys, &options.expressions);
     })
 }
