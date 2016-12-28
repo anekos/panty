@@ -1,13 +1,14 @@
 
 use collector;
 use gvim;
+use lister;
 
 
 
-pub fn broadcast(stocks: collector::Stocks, keys: Vec<String>, expressions: Vec<String>) {
-    let m_stocks = stocks.lock().unwrap();
-    let servernames = m_stocks.iter().map(|it| it.servername.clone());
-    for servername in servernames {
-        gvim::remote(&servername, &keys, &expressions);
+pub fn broadcast(stocks: collector::Stocks, conditions: lister::ConditionSet, keys: Vec<String>, expressions: Vec<String>) {
+    let instances = lister::list(Some(stocks), conditions);
+    for instance in instances {
+        trace!("broadcast: {}", instance.servername);
+        gvim::remote(&instance.servername, &keys, &expressions);
     }
 }

@@ -31,8 +31,8 @@ pub fn meditate(stocks: collector::Stocks, max_stocks: usize, socket_filepath: &
                                     spawn_options,
                                     nofork,
                                     stream),
-                            Broadcast {keys, expressions} =>
-                                broadcaster::broadcast(stocks.clone(), keys, expressions),
+                            Broadcast {keys, expressions, conditions} =>
+                                broadcaster::broadcast(stocks.clone(), conditions, keys, expressions),
                             Renew =>
                                 collector::renew(stocks.clone(), max_stocks, spawn_options),
                             Clean =>

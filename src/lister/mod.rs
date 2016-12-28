@@ -7,17 +7,19 @@ use collector::Stocks;
 
 
 
-#[derive(PartialEq,Eq,Hash,Clone)]
+#[derive(PartialEq,Eq,Hash,Clone,RustcEncodable,RustcDecodable,Debug)]
 pub enum Condition {
     Visible(bool),
     Stocked(bool)
 }
 
+pub type ConditionSet = HashSet<Condition>;
 
-pub fn parse_condition(s: &str) -> Result<HashSet<Condition>, String> {
+
+pub fn parse_condition(s: &str) -> Result<ConditionSet, String> {
     use self::Condition::*;
 
-    let mut set: HashSet<Condition> = HashSet::new();
+    let mut set: ConditionSet = HashSet::new();
 
     for term in s.split_terminator(',') {
         let invert = term.starts_with("!");
@@ -25,7 +27,7 @@ pub fn parse_condition(s: &str) -> Result<HashSet<Condition>, String> {
         match term {
             "visible" => set.insert(Visible(invert)),
             "stocked" => set.insert(Stocked(invert)),
-            invalid => return Err(format!("Invalid target: {}", invalid))
+            invalid => return Err(format!("Invalid condition name: {}", invalid))
         };
     }
 
@@ -77,7 +79,6 @@ fn condition_match(stocks: Option<Stocks>, conditions: HashSet<Condition>, serve
 
     with_display!(display => {
         if let Some(window) = gvim::fetch_window_id(&servername) {
-
             let mut matched = true;
             for condition in conditions {
                 let m = match condition {
@@ -89,6 +90,8 @@ fn condition_match(stocks: Option<Stocks>, conditions: HashSet<Condition>, serve
                     break;
                 }
             }
+
+            trace!("stocked_servers: {:?} {:?} {:?}", matched, stocked_servers, servername);
 
             if matched {
                 if let Some(title) = get_text_property(display, window, "WM_NAME") {

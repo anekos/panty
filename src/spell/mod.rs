@@ -4,11 +4,13 @@ use std::io::{Write, BufReader, BufRead};
 use std::net::Shutdown;
 use unix_socket::UnixStream;
 
+use lister;
+
 
 #[derive(RustcEncodable, RustcDecodable, Clone, Debug)]
 pub enum Spell {
     Summon {files: Vec<String>, keys: Vec<String>, expressions: Vec<String>, role: Option<String>, nofork: bool},
-    Broadcast {keys: Vec<String>, expressions: Vec<String>},
+    Broadcast {conditions: lister::ConditionSet, keys: Vec<String>, expressions: Vec<String>},
     Renew,
     Clean
 }

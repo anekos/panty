@@ -137,7 +137,7 @@ pub fn remote(servername: &str, keys: &[String], expressions: &[String]) {
         buffer.concat()
     }
 
-    if keys.is_empty() || expressions.is_empty() {
+    if keys.is_empty() && expressions.is_empty() {
         return
     }
 

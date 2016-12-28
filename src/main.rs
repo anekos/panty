@@ -6,6 +6,7 @@ extern crate log;
 extern crate env_logger;
 
 use argparse::{ArgumentParser, Store, StoreOption, List, Collect, StoreFalse, StoreTrue};
+use std::collections::HashSet;
 use std::env::home_dir;
 use std::fs;
 use std::io::{stdout, stderr};
@@ -169,6 +170,7 @@ fn command_clean(socket_filepath: &str) {
 fn command_broadcast(socket_filepath: &str, args: Vec<String>) {
     let mut keys: Vec<String> = vec![];
     let mut expressions: Vec<String> = vec![];
+    let mut conditions: Option<String> = None;
 
     {
         let mut ap = ArgumentParser::new();
@@ -177,13 +179,21 @@ fn command_broadcast(socket_filepath: &str, args: Vec<String>) {
 
         ap.refer(&mut keys).add_option(&["--send", "-s"], Collect, "Send key sequence");
         ap.refer(&mut expressions).add_option(&["--expr", "-e"], Collect, "Evaluate the expression");
+        ap.refer(&mut conditions).add_option(&["--conditions", "-c"], StoreOption, "Specify targets");
 
         ap.parse(args, &mut stdout(), &mut stderr()).map_err(|x| std::process::exit(x)).unwrap();
     }
 
+    let conditions =
+        if let Some(s) = conditions {
+            lister::parse_condition(&*s).unwrap()
+        } else {
+            HashSet::new()
+        };
+
     spell::cast(
         socket_filepath,
-        spell::Spell::Broadcast {keys: keys, expressions: expressions});
+        spell::Spell::Broadcast {conditions: conditions, keys: keys, expressions: expressions});
 }
 
 
