@@ -1,10 +1,14 @@
 
 extern crate panty;
 extern crate argparse;
+#[macro_use]
+extern crate log;
 extern crate env_logger;
 
 use argparse::{ArgumentParser, Store, StoreOption, List, Collect, StoreFalse, StoreTrue, Print};
-use std::env::{home_dir, current_dir};
+use std::env::home_dir;
+use std::collections::HashSet;
+use std::fs;
 use std::io::{stdout, stderr};
 use std::path::PathBuf;
 use std::str::FromStr;
@@ -22,6 +26,7 @@ enum Command {
     Edit,
     TabEdit,
     Clean,
+    Broadcast,
 }
 
 impl FromStr for Command {
@@ -40,6 +45,8 @@ impl FromStr for Command {
                 => Ok(Command::TabEdit),
             "clean"
                 => Ok(Command::Clean),
+            "broadcast"
+                => Ok(Command::Broadcast),
             _ => Err(()),
         }
     }
@@ -49,8 +56,9 @@ impl FromStr for Command {
 fn command_summon(socket_filepath: &str, args: Vec<String>) {
 
     let mut role = None;
-    let mut command_args: Vec<String> = vec![];
-    let mut keys: Option<String> = None;
+    let mut files: Vec<String> = vec![];
+    let mut keys: Vec<String> = vec![];
+    let mut expressions: Vec<String> = vec![];
     let mut nofork: bool = false;
 
     {
@@ -60,18 +68,20 @@ fn command_summon(socket_filepath: &str, args: Vec<String>) {
 
         ap.refer(&mut role).add_option(&["--role", "-r"], StoreOption, "Set window role");
         ap.refer(&mut nofork).add_option(&["--nofork", "-n"], StoreTrue, "Emulation gVim's --nofork");
-        ap.refer(&mut keys).add_option(&["--send", "-s"], StoreOption, "Send key sequence");
-        ap.refer(&mut command_args).add_argument("arguments", List, "Files");
+        ap.refer(&mut keys).add_option(&["--send", "-s"], Collect, "Send key sequence");
+        ap.refer(&mut expressions).add_option(&["--expr", "-e"], Collect, "Evaluate the expression");
+        ap.refer(&mut files).add_argument("arguments", List, "Files");
 
         ap.parse(args, &mut stdout(), &mut stderr()).map_err(|x| std::process::exit(x)).unwrap();
     }
 
-    let paths: Vec<String> = command_args.iter().map(|it| to_absolute_path(it)).collect();
+    let files: Vec<String> = files.iter().map(|it| to_absolute_path(it)).collect();
+
 
     let servername =
         spell::cast(
             socket_filepath,
-            spell::Spell::Summon {files: paths, keys: keys, role: role, nofork: nofork});
+            spell::Spell::Summon {files: files, keys: keys, expressions: expressions, role: role, nofork: nofork});
     print!("{}", servername)
 }
 
@@ -130,15 +140,15 @@ fn command_edit(socket_filepath: &str, args: Vec<String>, tab: bool) {
         ap.parse(args, &mut stdout(), &mut stderr()).map_err(|x| std::process::exit(x)).unwrap();
     }
 
-    let paths: Vec<String> = files.iter().map(|it| to_absolute_path(it)).collect();
+    let files: Vec<String> = files.iter().map(|it| to_absolute_path(it)).collect();
 
     let servername =
-        sender::send_files(files, tab, use_panty).or_else(|| {
+        sender::send_files(files.clone(), tab, use_panty).or_else(|| {
             if use_panty {
                 Some(
                     spell::cast(
                         socket_filepath,
-                        spell::Spell::Summon {files: paths, keys: None, role: None, nofork: false}))
+                        spell::Spell::Summon {files: files, keys: vec![], expressions: vec![], role: None, nofork: false}))
             } else {
                 None
             }
@@ -154,6 +164,38 @@ fn command_clean(socket_filepath: &str) {
     spell::cast(
         socket_filepath,
         spell::Spell::Clean);
+}
+
+
+fn command_broadcast(socket_filepath: &str, args: Vec<String>) {
+    let mut keys: Vec<String> = vec![];
+    let mut expressions: Vec<String> = vec![];
+    let mut conditions: Option<String> = None;
+
+    {
+        let mut ap = ArgumentParser::new();
+
+        ap.set_description("Broadcast --remote-send or --remote-expr");
+
+        ap.refer(&mut keys).add_option(&["--send", "-s"], Collect, "Send key sequence");
+        ap.refer(&mut expressions).add_option(&["--expr", "-e"], Collect, "Evaluate the expression");
+        ap.refer(&mut conditions).add_option(&["--conditions", "-c"], StoreOption, "Specify targets: visible, stocked, panty");
+
+        ap.parse(args, &mut stdout(), &mut stderr()).map_err(|x| std::process::exit(x)).unwrap();
+    }
+
+    let conditions =
+        if let Some(s) = conditions {
+            lister::parse_condition(&*s).unwrap()
+        } else {
+            HashSet::new()
+        };
+
+    let output =
+        spell::cast(
+            socket_filepath,
+            spell::Spell::Broadcast {conditions: conditions, keys: keys, expressions: expressions});
+    print!("{}", output);
 }
 
 
@@ -195,17 +237,12 @@ fn main() {
         Command::Edit => command_edit(socket_filepath, args, false),
         Command::TabEdit => command_edit(socket_filepath, args, true),
         Command::Clean => command_clean(socket_filepath),
+        Command::Broadcast => command_broadcast(socket_filepath, args),
     }
 }
 
 
 fn to_absolute_path(path: &str) -> String {
     let buf = PathBuf::from(path);
-    if buf.is_absolute() {
-        buf.to_str().unwrap().to_string()
-    } else {
-        let mut cwd = current_dir().unwrap();
-        cwd.push(buf);
-        cwd.to_str().unwrap().to_string()
-    }
+    fs::canonicalize(buf).map(|it| it.to_str().unwrap().to_string()).unwrap_or(path.to_owned())
 }

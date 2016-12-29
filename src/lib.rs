@@ -22,6 +22,8 @@ pub mod x;
 pub mod namer;
 pub mod gvim;
 pub mod spell;
+pub mod lister;
+pub mod broadcaster;
 pub mod mage;
 pub mod collector;
 pub mod summoner;

@@ -1,13 +1,16 @@
 
 use rustc_serialize::json;
-use std::io::{Write, BufReader, BufRead};
+use std::io::{Read, Write, BufReader};
 use std::net::Shutdown;
 use unix_socket::UnixStream;
+
+use lister;
 
 
 #[derive(RustcEncodable, RustcDecodable, Clone, Debug)]
 pub enum Spell {
-    Summon {files: Vec<String>, keys: Option<String>, role: Option<String>, nofork: bool},
+    Summon {files: Vec<String>, keys: Vec<String>, expressions: Vec<String>, role: Option<String>, nofork: bool},
+    Broadcast {conditions: lister::ConditionSet, keys: Vec<String>, expressions: Vec<String>},
     Renew,
     Clean
 }
@@ -21,6 +24,6 @@ pub fn cast(socket_filepath: &str, spell: Spell) -> String {
 
     let mut reader = BufReader::new(&stream);
     let mut response = String::new();
-    reader.read_line(&mut response).unwrap();
+    reader.read_to_string(&mut response).unwrap();
     response
 }

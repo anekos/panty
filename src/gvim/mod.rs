@@ -19,6 +19,7 @@ pub struct SpawnOptions {
 }
 
 
+#[derive(Clone)]
 pub struct Instance {
     pub window: Window,
     pub servername: String,
@@ -61,7 +62,7 @@ pub fn find_instances(visibility: bool) -> Vec<Instance> {
 }
 
 
-fn fetch_window_id(servername: &str) -> Option<Window> {
+pub fn fetch_window_id(servername: &str) -> Option<Window> {
     let output: Vec<u8> = Command::new("gvim")
         .arg("--servername")
         .arg(servername)
@@ -131,13 +132,25 @@ pub fn send_files(servername: &str, files: Vec<String>, tab: bool) {
 }
 
 
-pub fn send_keys(servername: &str, keys: String) {
-    Command::new("gvim")
+pub fn remote(servername: &str, keys: &[String], expressions: &[String]) -> Option<BufReader<ChildStdout>> {
+    fn gen_args(name: &str, items: &[String]) -> Vec<String> {
+        let buffer: Vec<Vec<String>> = items.iter().map(|it| vec![name.to_string(), it.to_string()]).collect();
+        buffer.concat()
+    }
+
+    if keys.is_empty() && expressions.is_empty() {
+        return None
+    }
+
+    let child = Command::new("gvim")
         .arg("--servername")
         .arg(servername)
-        .arg("--remote-send")
-        .arg(keys)
+        .args(gen_args("--remote-send", keys).as_slice())
+        .args(gen_args("--remote-expr", expressions).as_slice())
+        .stdout(Stdio::piped())
         .spawn().unwrap();
+
+    Some(BufReader::new(child.stdout.unwrap()))
 }
 
 
@@ -235,7 +248,7 @@ pub fn new_servernames(windows: usize) -> Vec<String> {
 }
 
 
-fn fetch_existing_servernames<T>() -> T
+pub fn fetch_existing_servernames<T>() -> T
 where T: FromIterator<String> {
     let output: Vec<u8> = Command::new("gvim")
         .arg("--serverlist")

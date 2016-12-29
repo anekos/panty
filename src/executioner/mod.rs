@@ -3,7 +3,6 @@ use ctrlc;
 use std::fs::remove_file;
 use std::process::exit;
 
-
 use collector;
 
 
