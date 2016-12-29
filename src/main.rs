@@ -179,7 +179,7 @@ fn command_broadcast(socket_filepath: &str, args: Vec<String>) {
 
         ap.refer(&mut keys).add_option(&["--send", "-s"], Collect, "Send key sequence");
         ap.refer(&mut expressions).add_option(&["--expr", "-e"], Collect, "Evaluate the expression");
-        ap.refer(&mut conditions).add_option(&["--conditions", "-c"], StoreOption, "Specify targets");
+        ap.refer(&mut conditions).add_option(&["--conditions", "-c"], StoreOption, "Specify targets: visible, stocked, panty");
 
         ap.parse(args, &mut stdout(), &mut stderr()).map_err(|x| std::process::exit(x)).unwrap();
     }
@@ -191,9 +191,11 @@ fn command_broadcast(socket_filepath: &str, args: Vec<String>) {
             HashSet::new()
         };
 
-    spell::cast(
-        socket_filepath,
-        spell::Spell::Broadcast {conditions: conditions, keys: keys, expressions: expressions});
+    let output =
+        spell::cast(
+            socket_filepath,
+            spell::Spell::Broadcast {conditions: conditions, keys: keys, expressions: expressions});
+    print!("{}", output);
 }
 
 

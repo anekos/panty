@@ -1,6 +1,6 @@
 
 use rustc_serialize::json;
-use std::io::{Write, BufReader, BufRead};
+use std::io::{Read, Write, BufReader};
 use std::net::Shutdown;
 use unix_socket::UnixStream;
 
@@ -24,6 +24,6 @@ pub fn cast(socket_filepath: &str, spell: Spell) -> String {
 
     let mut reader = BufReader::new(&stream);
     let mut response = String::new();
-    reader.read_line(&mut response).unwrap();
+    reader.read_to_string(&mut response).unwrap();
     response
 }

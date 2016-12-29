@@ -19,6 +19,7 @@ pub struct SpawnOptions {
 }
 
 
+#[derive(Clone)]
 pub struct Instance {
     pub window: Window,
     pub servername: String,
@@ -131,22 +132,25 @@ pub fn send_files(servername: &str, files: Vec<String>, tab: bool) {
 }
 
 
-pub fn remote(servername: &str, keys: &[String], expressions: &[String]) {
+pub fn remote(servername: &str, keys: &[String], expressions: &[String]) -> Option<BufReader<ChildStdout>> {
     fn gen_args(name: &str, items: &[String]) -> Vec<String> {
         let buffer: Vec<Vec<String>> = items.iter().map(|it| vec![name.to_string(), it.to_string()]).collect();
         buffer.concat()
     }
 
     if keys.is_empty() && expressions.is_empty() {
-        return
+        return None
     }
 
-    Command::new("gvim")
+    let child = Command::new("gvim")
         .arg("--servername")
         .arg(servername)
         .args(gen_args("--remote-send", keys).as_slice())
         .args(gen_args("--remote-expr", expressions).as_slice())
+        .stdout(Stdio::piped())
         .spawn().unwrap();
+
+    Some(BufReader::new(child.stdout.unwrap()))
 }
 
 
