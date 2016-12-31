@@ -217,7 +217,7 @@ fn main() {
 
         ap.refer(&mut socket_filepath).add_option(&["--socket", "-s"], Store, "Socket file path");
 
-        ap.refer(&mut command).required().add_argument("command", Store, "summon|collector|renew|edit|tabedit");
+        ap.refer(&mut command).required().add_argument("command", Store, "summon|collector|renew|edit|tabedit|broadcast");
         ap.refer(&mut args).add_argument("arguments", List, "Arguments for command");
 
         ap.add_option(&["-V", "--version"], Print(env!("CARGO_PKG_VERSION").to_string()), "Show version");
