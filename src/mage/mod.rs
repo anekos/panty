@@ -2,6 +2,7 @@
 use rustc_serialize::json;
 use std::io::{Read, Write};
 use unix_socket::{UnixListener, UnixStream};
+use std::net::Shutdown;
 use std::thread;
 
 use summoner;
@@ -61,16 +62,19 @@ fn summon(stocks: collector::Stocks, summon_options: summoner::SummonOptions, sp
     let stock = collector::emit(stocks.clone());
     let mut stdout_reader = stock.stdout_reader;
     let servername = stock.servername;
+
     summoner::summon(servername.clone(), stock.window, summon_options);
     collector::collect(stocks.clone(), 1, spawn_options);
+
     if nofork {
         thread::spawn(move || {
             let mut output = String::new();
             stdout_reader.read_to_string(&mut output).unwrap();
-            debug!("gVim output: {}", output);
             stream.write_fmt(format_args!("{}\n", servername)).unwrap();
+            stream.shutdown(Shutdown::Both).unwrap();
         });
     } else {
         stream.write_fmt(format_args!("{}\n", servername)).unwrap();
+        stream.shutdown(Shutdown::Both).unwrap();
     }
 }
