@@ -7,6 +7,7 @@ use std::process::{Command, Stdio, ChildStdout};
 use std::thread;
 use std::time::Duration;
 use x11::xlib::Window;
+use libc;
 
 use namer;
 
@@ -173,8 +174,20 @@ pub fn spawn(servername: &str, options: &SpawnOptions) -> (Window, BufReader<Chi
         .spawn()
         .expect("Failed to execute process");
 
+    // FIXME??
+    {
+        let pid = child.id();
+
+        thread::spawn(move || {
+            let mut status = 1;
+            unsafe { libc::waitpid(pid as i32, &mut status, 0) };
+            trace!("process done: pid = {}", pid);
+        });
+    }
+
     let mut line: String = String::new();
-    let mut reader = BufReader::new(child.stdout.unwrap());
+    let stdout = child.stdout.unwrap();
+    let mut reader = BufReader::new(stdout);
 
     for _ in 0..300 {
 

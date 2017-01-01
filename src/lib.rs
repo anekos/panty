@@ -12,6 +12,7 @@ extern crate inotify;
 extern crate ctrlc;
 extern crate walkdir;
 extern crate rand;
+extern crate libc;
 
 
 
