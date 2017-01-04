@@ -59,6 +59,7 @@ fn command_summon(socket_filepath: &str, args: Vec<String>) {
     let mut files: Vec<String> = vec![];
     let mut keys: Vec<String> = vec![];
     let mut expressions: Vec<String> = vec![];
+    let mut after: Option<String> = None;
     let mut nofork: bool = false;
 
     {
@@ -70,6 +71,7 @@ fn command_summon(socket_filepath: &str, args: Vec<String>) {
         ap.refer(&mut nofork).add_option(&["--nofork", "-n"], StoreTrue, "Emulation gVim's --nofork");
         ap.refer(&mut keys).add_option(&["--send", "-s"], Collect, "Send key sequence");
         ap.refer(&mut expressions).add_option(&["--expr", "-e"], Collect, "Evaluate the expression");
+        ap.refer(&mut after).add_option(&["--after", "-a"], StoreOption, "Run the command after summon");
         ap.refer(&mut files).add_argument("arguments", List, "Files");
 
         ap.parse(args, &mut stdout(), &mut stderr()).map_err(|x| std::process::exit(x)).unwrap();
@@ -81,7 +83,7 @@ fn command_summon(socket_filepath: &str, args: Vec<String>) {
     let servername =
         spell::cast(
             socket_filepath,
-            spell::Spell::Summon {files: files, keys: keys, expressions: expressions, role: role, nofork: nofork});
+            spell::Spell::Summon {files: files, keys: keys, expressions: expressions, role: role, nofork: nofork, after: after});
     print!("{}", servername)
 }
 
@@ -148,7 +150,7 @@ fn command_edit(socket_filepath: &str, args: Vec<String>, tab: bool) {
                 Some(
                     spell::cast(
                         socket_filepath,
-                        spell::Spell::Summon {files: files, keys: vec![], expressions: vec![], role: None, nofork: false}))
+                        spell::Spell::Summon {files: files, keys: vec![], expressions: vec![], role: None, nofork: false, after: None}))
             } else {
                 None
             }

@@ -25,10 +25,10 @@ pub fn meditate(stocks: collector::Stocks, max_stocks: usize, socket_filepath: &
                 match stream.read_to_string(&mut buf).unwrap() {
                     _ => {
                         match json::decode(buf.as_str()).expect("Fail: json::decode") {
-                            Summon {files, keys, expressions, role, nofork} =>
+                            Summon {files, keys, expressions, after, role, nofork} =>
                                 summon(
                                     stocks.clone(),
-                                    summoner::SummonOptions {files: files, role: role, keys: keys, expressions: expressions},
+                                    summoner::SummonOptions {files: files, role: role, keys: keys, expressions: expressions, after: after},
                                     spawn_options,
                                     nofork,
                                     stream),
