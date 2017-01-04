@@ -53,7 +53,7 @@ impl FromStr for Command {
 }
 
 
-fn command_summon(socket_filepath: &str, args: Vec<String>) {
+fn command_summon(verbose: bool, socket_filepath: &str, args: Vec<String>) {
 
     let mut role = None;
     let mut files: Vec<String> = vec![];
@@ -81,12 +81,11 @@ fn command_summon(socket_filepath: &str, args: Vec<String>) {
 
     let files: Vec<String> = files.iter().map(|it| to_absolute_path(it)).collect();
 
-
-    let servername =
+    puts_result(
+        verbose,
         spell::cast(
             socket_filepath,
-            spell::Spell::Summon {files: files, keys: keys, expressions: expressions, role: role, nofork: nofork, after: after, before: before});
-    print!("{}", servername)
+            spell::Spell::Summon {files: files, keys: keys, expressions: expressions, role: role, nofork: nofork, after: after, before: before}));
 }
 
 
@@ -122,14 +121,16 @@ fn command_collector(socket_filepath: &str, args: Vec<String>) {
 }
 
 
-fn command_renew(socket_filepath: &str) {
-    spell::cast(
-        socket_filepath,
-        spell::Spell::Renew);
+fn command_renew(verbose: bool, socket_filepath: &str) {
+    puts_result(
+        verbose,
+        spell::cast(
+            socket_filepath,
+            spell::Spell::Renew));
 }
 
 
-fn command_edit(socket_filepath: &str, args: Vec<String>, tab: bool) {
+fn command_edit(verbose: bool, socket_filepath: &str, args: Vec<String>, tab: bool) {
     let mut files: Vec<String> = vec![];
     let mut use_panty: bool = true;
 
@@ -159,7 +160,7 @@ fn command_edit(socket_filepath: &str, args: Vec<String>, tab: bool) {
         });
 
     if let Some(servername) = servername {
-        print!("{}", servername)
+        puts_result(verbose, servername);
     }
 }
 
@@ -171,7 +172,7 @@ fn command_clean(socket_filepath: &str) {
 }
 
 
-fn command_broadcast(socket_filepath: &str, args: Vec<String>) {
+fn command_broadcast(verbose: bool, socket_filepath: &str, args: Vec<String>) {
     let mut keys: Vec<String> = vec![];
     let mut expressions: Vec<String> = vec![];
     let mut conditions: Option<String> = None;
@@ -195,11 +196,18 @@ fn command_broadcast(socket_filepath: &str, args: Vec<String>) {
             HashSet::new()
         };
 
-    let output =
+    puts_result(
+        verbose,
         spell::cast(
             socket_filepath,
-            spell::Spell::Broadcast {conditions: conditions, keys: keys, expressions: expressions});
-    print!("{}", output);
+            spell::Spell::Broadcast {conditions: conditions, keys: keys, expressions: expressions}));
+}
+
+
+fn puts_result(verbose: bool, output: String) {
+    if verbose {
+        print!("{}", output);
+    }
 }
 
 
@@ -208,6 +216,7 @@ fn main() {
 
     let mut command = Command::Summon;
     let mut args = vec!();
+    let mut verbose = false;
     let mut socket_filepath: String = {
         let mut buf = home_dir().unwrap();
         buf.push(".stockings");
@@ -220,11 +229,13 @@ fn main() {
         ap.set_description("panty and stocking");
 
         ap.refer(&mut socket_filepath).add_option(&["--socket", "-s"], Store, "Socket file path");
+        ap.refer(&mut verbose).add_option(&["-V", "--verbose"], StoreTrue, "Print any messages");
 
         ap.refer(&mut command).required().add_argument("command", Store, "summon|collector|renew|edit|tabedit|broadcast");
+
         ap.refer(&mut args).add_argument("arguments", List, "Arguments for command");
 
-        ap.add_option(&["-V", "--version"], Print(env!("CARGO_PKG_VERSION").to_string()), "Show version");
+        ap.add_option(&["-v", "--version"], Print(env!("CARGO_PKG_VERSION").to_string()), "Show version");
 
         ap.stop_on_first_argument(true);
         ap.parse_args_or_exit();
@@ -235,13 +246,13 @@ fn main() {
     let socket_filepath = socket_filepath.as_str();
 
     match command {
-        Command::Summon => command_summon(socket_filepath, args),
+        Command::Summon => command_summon(verbose, socket_filepath, args),
         Command::Collector => command_collector(socket_filepath, args),
-        Command::Renew => command_renew(socket_filepath),
-        Command::Edit => command_edit(socket_filepath, args, false),
-        Command::TabEdit => command_edit(socket_filepath, args, true),
+        Command::Renew => command_renew(verbose, socket_filepath),
+        Command::Edit => command_edit(verbose, socket_filepath, args, false),
+        Command::TabEdit => command_edit(verbose, socket_filepath, args, true),
         Command::Clean => command_clean(socket_filepath),
-        Command::Broadcast => command_broadcast(socket_filepath, args),
+        Command::Broadcast => command_broadcast(verbose, socket_filepath, args),
     }
 }
 
