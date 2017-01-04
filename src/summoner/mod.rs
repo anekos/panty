@@ -11,11 +11,16 @@ pub struct SummonOptions {
     pub keys: Vec<String>,
     pub expressions: Vec<String>,
     pub role: Option<String>,
-    pub after: Option<String>
+    pub after: Option<String>,
+    pub before: Option<String>
 }
 
 
 pub fn summon(servername: String, window: Window, options: SummonOptions) {
+
+    if let Some(command_line) = options.before {
+        after(&command_line, &servername, window);
+    }
 
     with_display!(display => {
         let desktop = get_current_desktop(display) as i64;
