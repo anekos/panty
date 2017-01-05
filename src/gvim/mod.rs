@@ -16,7 +16,8 @@ use namer;
 pub struct SpawnOptions {
     pub current_directory: Option<String>,
     pub command: String,
-    pub unmap: bool
+    pub unmap: bool,
+    pub desktop: Option<i64>
 }
 
 
@@ -219,7 +220,7 @@ pub fn spawn_secretly(servername: &str, options: &SpawnOptions) -> (Window, BufR
 
         set_text_property(display, wid, "_PANTY_SERVERNAME", servername);
 
-        if options.unmap {
+        if options.unmap || options.desktop.is_some() {
             {
                 let max_tries = 50;
                 let mut tried = 0;
@@ -230,7 +231,12 @@ pub fn spawn_secretly(servername: &str, options: &SpawnOptions) -> (Window, BufR
                 }
 
                 if tried < max_tries {
-                    unmap_window(display, wid);
+                    if let Some(desktop) = options.desktop {
+                        set_desktop_for_window(display, wid, desktop);
+                    }
+                    if options.unmap {
+                        unmap_window(display, wid);
+                    }
                 }
             }
         }

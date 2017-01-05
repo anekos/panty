@@ -96,6 +96,7 @@ fn command_collector(socket_filepath: &str, args: Vec<String>) {
     let mut current_directory = None;
     let mut gvim_command = "gvim".to_string();
     let mut unmap = true;
+    let mut desktop = None;
 
     {
         let mut ap = ArgumentParser::new();
@@ -108,6 +109,7 @@ fn command_collector(socket_filepath: &str, args: Vec<String>) {
         ap.refer(&mut current_directory).add_option(&["--cd", "-c", "--current-directory"], StoreOption, "Current directory");
         ap.refer(&mut gvim_command).add_option(&["--gvim-command", "-g"], Store, "gVim command");
         ap.refer(&mut unmap).add_option(&["--no-unmap"], StoreFalse, "Do not unmap");
+        ap.refer(&mut desktop).add_option(&["--desktop", "-d"], StoreOption, "Move spawned windows to the desktop (workspace)");
 
         ap.parse(args, &mut stdout(), &mut stderr()).map_err(|x| std::process::exit(x)).unwrap();
     }
@@ -117,7 +119,7 @@ fn command_collector(socket_filepath: &str, args: Vec<String>) {
         socket_filepath,
         watch_targets,
         recursive_watch_targets,
-        SpawnOptions {current_directory: current_directory, command: gvim_command, unmap: unmap});
+        SpawnOptions {current_directory: current_directory, command: gvim_command, unmap: unmap, desktop: desktop});
 }
 
 
