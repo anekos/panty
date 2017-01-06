@@ -228,15 +228,7 @@ pub fn spawn_secretly(servername: &str, options: &SpawnOptions) -> (Window, BufR
 
         if options.unmap || options.desktop.is_some() {
             {
-                let max_tries = 50;
-                let mut tried = 0;
-
-                while !is_window_visible(display, wid) && tried < max_tries {
-                    tried += 1;
-                    thread::sleep(Duration::from_millis(1));
-                }
-
-                if tried < max_tries {
+                if wait_for_visible(display, wid, 50) {
                     if let Some(desktop) = options.desktop {
                         set_desktop_for_window(display, wid, desktop);
                     }

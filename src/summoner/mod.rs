@@ -37,6 +37,9 @@ pub fn summon(servername: String, window: Window, options: SummonOptions) {
         }
 
          gvim::send_files(&servername, options.files, false);
+
+         wait_for_visible(display, window, 100);
+
          gvim::remote(&servername, &options.keys, &options.expressions, false);
     });
 

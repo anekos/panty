@@ -7,6 +7,8 @@ use std::os::raw::c_void;
 use std::slice;
 use std::thread;
 use std::time;
+use std::time::Duration;
+
 use x11::xlib::*;
 
 
@@ -272,6 +274,19 @@ pub fn get_current_desktop(display: *mut Display) ->  i64 {
             panic!("Fail: _NET_CURRENT_DESKTOP")
         }
     }
+}
+
+
+pub fn wait_for_visible(display: *mut Display, window: Window, max_tries: u64) -> bool {
+    let mut tried = 0;
+    while !is_window_visible(display, window) {
+        tried += 1;
+        thread::sleep(Duration::from_millis(1));
+        if max_tries < tried {
+            return false;
+        }
+    }
+    true
 }
 
 
