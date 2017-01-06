@@ -36,9 +36,11 @@ pub fn summon(servername: String, window: Window, options: SummonOptions) {
             set_window_role(display, window, &gvim::SUMMONED_WINDOW_ROLE);
         }
 
-         gvim::send_files(&servername, options.files, false);
+         if !wait_for_visible(display, window, 100) {
+             error!("Failed: wait_for_visible for {}", servername);
+         }
 
-         wait_for_visible(display, window, 100);
+         gvim::send_files(&servername, options.files, false);
 
          gvim::remote(&servername, &options.keys, &options.expressions, false);
     });
