@@ -23,7 +23,7 @@ pub fn parse_condition(s: &str) -> Result<ConditionSet, String> {
     let mut set: ConditionSet = HashSet::new();
 
     for term in s.split_terminator(',') {
-        let invert = term.starts_with("!");
+        let invert = term.starts_with('!');
         let term: &str = if invert { &term[1..] } else { term };
         match term {
             "v" | "visible" => set.insert(Visible(invert)),
