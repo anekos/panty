@@ -134,7 +134,7 @@ pub fn send_files(servername: &str, files: Vec<String>, tab: bool) {
 }
 
 
-pub fn remote(servername: &str, keys: &[String], expressions: &[String]) -> Option<BufReader<ChildStdout>> {
+pub fn remote(servername: &str, keys: &[String], expressions: &[String], use_output: bool) -> Option<BufReader<ChildStdout>> {
     fn gen_args(name: &str, items: &[String]) -> Vec<String> {
         let buffer: Vec<Vec<String>> = items.iter().map(|it| vec![name.to_string(), it.to_string()]).collect();
         buffer.concat()
@@ -144,15 +144,21 @@ pub fn remote(servername: &str, keys: &[String], expressions: &[String]) -> Opti
         return None
     }
 
-    let child = Command::new("gvim")
-        .arg("--servername")
+    let mut command = Command::new("gvim");
+
+    command.arg("--servername")
         .arg(servername)
         .args(gen_args("--remote-send", keys).as_slice())
-        .args(gen_args("--remote-expr", expressions).as_slice())
-        .stdout(Stdio::piped())
-        .spawn().unwrap();
+        .args(gen_args("--remote-expr", expressions).as_slice());
 
-    Some(BufReader::new(child.stdout.unwrap()))
+    if use_output {
+        command.stdout(Stdio::piped());
+        let child = command.spawn().unwrap();
+        Some(BufReader::new(child.stdout.unwrap()))
+    } else {
+        command.spawn().unwrap();
+        None
+    }
 }
 
 
@@ -222,15 +228,7 @@ pub fn spawn_secretly(servername: &str, options: &SpawnOptions) -> (Window, BufR
 
         if options.unmap || options.desktop.is_some() {
             {
-                let max_tries = 50;
-                let mut tried = 0;
-
-                while !is_window_visible(display, wid) && tried < max_tries {
-                    tried += 1;
-                    thread::sleep(Duration::from_millis(1));
-                }
-
-                if tried < max_tries {
+                if wait_for_visible(display, wid, 50) {
                     if let Some(desktop) = options.desktop {
                         set_desktop_for_window(display, wid, desktop);
                     }
