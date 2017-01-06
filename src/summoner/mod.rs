@@ -37,7 +37,7 @@ pub fn summon(servername: String, window: Window, options: SummonOptions) {
         }
 
          gvim::send_files(&servername, options.files, false);
-         gvim::remote(&servername, &options.keys, &options.expressions);
+         gvim::remote(&servername, &options.keys, &options.expressions, false);
     });
 
     if let Some(command_line) = options.after {
