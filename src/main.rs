@@ -19,14 +19,15 @@ use panty::gvim::SpawnOptions;
 
 
 #[derive(Debug)]
+#[allow(non_camel_case_types)]
 enum Command {
-    Summon,
-    Collector,
-    Renew,
-    Edit,
-    TabEdit,
-    Clean,
-    Broadcast,
+    summon,
+    collector,
+    renew,
+    edit,
+    tabEdit,
+    clean,
+    broadcast,
 }
 
 impl FromStr for Command {
@@ -34,19 +35,19 @@ impl FromStr for Command {
     fn from_str(src: &str) -> Result<Command, ()> {
         match src {
             "summon" | "s"
-                => Ok(Command::Summon),
+                => Ok(Command::summon),
             "collector" | "c"
-                => Ok(Command::Collector),
+                => Ok(Command::collector),
             "renew" | "r"
-                => Ok(Command::Renew),
+                => Ok(Command::renew),
             "edit" | "e"
-                => Ok(Command::Edit),
+                => Ok(Command::edit),
             "tabedit" | "tedit" | "t"
-                => Ok(Command::TabEdit),
+                => Ok(Command::tabEdit),
             "clean"
-                => Ok(Command::Clean),
+                => Ok(Command::clean),
             "broadcast"
-                => Ok(Command::Broadcast),
+                => Ok(Command::broadcast),
             _ => Err(()),
         }
     }
@@ -216,7 +217,7 @@ fn puts_result(verbose: bool, output: String) {
 fn main() {
     env_logger::init().unwrap();
 
-    let mut command = Command::Summon;
+    let mut command = Command::summon;
     let mut args = vec!();
     let mut verbose = false;
     let mut socket_filepath: String = {
@@ -233,7 +234,7 @@ fn main() {
         ap.refer(&mut socket_filepath).add_option(&["--socket", "-s"], Store, "Socket file path");
         ap.refer(&mut verbose).add_option(&["-V", "--verbose"], StoreTrue, "Print any messages");
 
-        ap.refer(&mut command).required().add_argument("command", Store, "summon|collector|renew|edit|tabedit|broadcast");
+        ap.refer(&mut command).required().add_argument("sub-command", Store, "summon|collector|renew|edit|tabedit|broadcast");
 
         ap.refer(&mut args).add_argument("arguments", List, "Arguments for command");
 
@@ -248,13 +249,13 @@ fn main() {
     let socket_filepath = socket_filepath.as_str();
 
     match command {
-        Command::Summon => command_summon(verbose, socket_filepath, args),
-        Command::Collector => command_collector(socket_filepath, args),
-        Command::Renew => command_renew(verbose, socket_filepath),
-        Command::Edit => command_edit(verbose, socket_filepath, args, false),
-        Command::TabEdit => command_edit(verbose, socket_filepath, args, true),
-        Command::Clean => command_clean(socket_filepath),
-        Command::Broadcast => command_broadcast(verbose, socket_filepath, args),
+        Command::summon => command_summon(verbose, socket_filepath, args),
+        Command::collector => command_collector(socket_filepath, args),
+        Command::renew => command_renew(verbose, socket_filepath),
+        Command::edit => command_edit(verbose, socket_filepath, args, false),
+        Command::tabEdit => command_edit(verbose, socket_filepath, args, true),
+        Command::clean => command_clean(socket_filepath),
+        Command::broadcast => command_broadcast(verbose, socket_filepath, args),
     }
 }
 
