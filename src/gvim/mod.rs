@@ -125,12 +125,13 @@ pub fn send_files(servername: &str, files: Vec<String>, tab: bool) {
         return
     }
 
-    Command::new("gvim")
+    let child = Command::new("gvim")
         .arg("--servername")
         .arg(servername)
         .arg(if tab {"--remote-tab"} else {"--remote"})
         .args(files.as_slice())
         .spawn().unwrap();
+    zombie_killer(child.id());
 }
 
 
@@ -151,14 +152,17 @@ pub fn remote(servername: &str, keys: &[String], expressions: &[String], use_out
         .args(gen_args("--remote-send", keys).as_slice())
         .args(gen_args("--remote-expr", expressions).as_slice());
 
-    if use_output {
+    let (pid, result) = if use_output {
         command.stdout(Stdio::piped());
         let child = command.spawn().unwrap();
-        Some(BufReader::new(child.stdout.unwrap()))
+        (child.id(), Some(BufReader::new(child.stdout.unwrap())))
     } else {
-        command.spawn().unwrap();
-        None
-    }
+        (command.spawn().unwrap().id(), None)
+    };
+
+    zombie_killer(pid);
+
+    result
 }
 
 
@@ -181,16 +185,7 @@ pub fn spawn(servername: &str, options: &SpawnOptions) -> (Window, BufReader<Chi
         .spawn()
         .expect("Failed to execute process");
 
-    // FIXME??
-    {
-        let pid = child.id();
-
-        thread::spawn(move || {
-            let mut status = 1;
-            unsafe { libc::waitpid(pid as i32, &mut status, 0) };
-            trace!("process done: pid = {}", pid);
-        });
-    }
+    zombie_killer(child.id());
 
     let mut line: String = String::new();
     let stdout = child.stdout.unwrap();
@@ -273,4 +268,13 @@ where T: FromIterator<String> {
         .unwrap()
         .stdout;
     String::from_utf8(output).unwrap().lines().map(|it| it.to_string()).collect()
+}
+
+
+fn zombie_killer(pid: u32) {
+    thread::spawn(move || {
+        let mut status = 1;
+        unsafe { libc::waitpid(pid as i32, &mut status, 0) };
+        trace!("process done: pid = {}", pid);
+    });
 }
