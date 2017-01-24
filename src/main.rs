@@ -6,6 +6,7 @@ extern crate log;
 extern crate env_logger;
 
 use argparse::{ArgumentParser, Store, StoreOption, List, Collect, StoreFalse, StoreTrue, Print};
+use env_logger::LogBuilder;
 use std::env::home_dir;
 use std::collections::HashSet;
 use std::fs;
@@ -215,8 +216,6 @@ fn puts_result(verbose: bool, output: String) {
 
 
 fn main() {
-    env_logger::init().unwrap();
-
     let mut command = Command::summon;
     let mut args = vec!();
     let mut verbose = false;
@@ -225,6 +224,7 @@ fn main() {
         buf.push(".stockings");
         buf.to_str().unwrap().to_string()
     };
+    let mut log_level = "error".to_string();
 
     {
         let mut ap = ArgumentParser::new();
@@ -233,6 +233,7 @@ fn main() {
 
         ap.refer(&mut socket_filepath).add_option(&["--socket", "-s"], Store, "Socket file path");
         ap.refer(&mut verbose).add_option(&["-V", "--verbose"], StoreTrue, "Print any messages");
+        ap.refer(&mut log_level).add_option(&["-l", "--log-level"], Store, "Log level");
 
         ap.refer(&mut command).required().add_argument("sub-command", Store, "summon|collector|renew|edit|tabedit|broadcast");
 
@@ -247,6 +248,12 @@ fn main() {
     args.insert(0, format!("command {:?}", command));
 
     let socket_filepath = socket_filepath.as_str();
+
+    {
+        let mut builder = LogBuilder::new();
+        builder.parse(&log_level);
+        builder.init().unwrap();
+    }
 
     match command {
         Command::summon => command_summon(verbose, socket_filepath, args),
