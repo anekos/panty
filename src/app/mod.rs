@@ -16,7 +16,7 @@ pub fn start(max_stocks: usize, socket_filepath: &str, watch_targets: Vec<String
     let stocks: collector::Stocks = Arc::new(Mutex::new(VecDeque::new()));
     initialize(socket_filepath);
     collector::collect(stocks.clone(), max_stocks, spawn_options.clone());
-    police::patrol(stocks.clone(), max_stocks, &watch_targets, &recursive_watch_targets, spawn_options.clone());
+    police::patrol(stocks.clone(), max_stocks, watch_targets, recursive_watch_targets, spawn_options.clone());
     executioner::watch(stocks.clone(), socket_filepath.to_string());
     mage::meditate(stocks.clone(), max_stocks, socket_filepath, spawn_options.clone());
 }

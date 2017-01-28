@@ -1,6 +1,6 @@
 [package]
 name = "panty"
-version = "0.8.1"
+version = "0.8.2"
 authors = ["anekos <anekos@snca.net>"]
 repository = "https://github.com/anekos/panty"
 keywords = ["vim", "gvim", "linux"]
@@ -15,14 +15,15 @@ doc = false
 
 [dependencies]
 argparse = "0.2"
-log = "0.3"
+ctrlc = { version = "2.0", features = ["termination"] }
 env_logger = "0.3"
+inotify = "0.3"
 lazy_static = "0.2"
 libc = "0.2"
-unix_socket = "0.5"
-x11 = { version = "2.11", features = ["xlib", "xinerama"] }
-rustc-serialize = "0.3"
-inotify = "0.3"
-ctrlc = { version = "2.0", features = ["termination"] }
-walkdir = "1.0.3"
+log = "0.3"
+patrol = { git = "https://github.com/anekos/patrol.git", rev = "cd86beae095a864b793f0629b87ae97979419c9c" }
 rand = "0.3"
+rustc-serialize = "0.3"
+unix_socket = "0.5"
+walkdir = "1.0.3"
+x11 = { version = "2.11", features = ["xlib", "xinerama"] }
