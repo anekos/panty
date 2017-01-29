@@ -55,7 +55,7 @@ impl FromStr for Command {
 }
 
 
-fn command_summon(verbose: bool, socket_filepath: &str, args: Vec<String>) {
+fn command_summon(silent: bool, socket_filepath: &str, args: Vec<String>) {
 
     let mut role = None;
     let mut files: Vec<String> = vec![];
@@ -84,7 +84,7 @@ fn command_summon(verbose: bool, socket_filepath: &str, args: Vec<String>) {
     let files: Vec<String> = files.iter().map(|it| to_absolute_path(it)).collect();
 
     puts_result(
-        verbose,
+        silent,
         spell::cast(
             socket_filepath,
             spell::Spell::Summon {files: files, keys: keys, expressions: expressions, role: role, nofork: nofork, after: after, before: before}));
@@ -125,16 +125,16 @@ fn command_collector(socket_filepath: &str, args: Vec<String>) {
 }
 
 
-fn command_renew(verbose: bool, socket_filepath: &str) {
+fn command_renew(silent: bool, socket_filepath: &str) {
     puts_result(
-        verbose,
+        silent,
         spell::cast(
             socket_filepath,
             spell::Spell::Renew));
 }
 
 
-fn command_edit(verbose: bool, socket_filepath: &str, args: Vec<String>, tab: bool) {
+fn command_edit(silent: bool, socket_filepath: &str, args: Vec<String>, tab: bool) {
     let mut files: Vec<String> = vec![];
     let mut use_panty: bool = true;
 
@@ -164,7 +164,7 @@ fn command_edit(verbose: bool, socket_filepath: &str, args: Vec<String>, tab: bo
         });
 
     if let Some(servername) = servername {
-        puts_result(verbose, servername);
+        puts_result(silent, servername);
     }
 }
 
@@ -176,7 +176,7 @@ fn command_clean(socket_filepath: &str) {
 }
 
 
-fn command_broadcast(verbose: bool, socket_filepath: &str, args: Vec<String>) {
+fn command_broadcast(silent: bool, socket_filepath: &str, args: Vec<String>) {
     let mut keys: Vec<String> = vec![];
     let mut expressions: Vec<String> = vec![];
     let mut conditions: Option<String> = None;
@@ -201,15 +201,15 @@ fn command_broadcast(verbose: bool, socket_filepath: &str, args: Vec<String>) {
         };
 
     puts_result(
-        verbose,
+        silent,
         spell::cast(
             socket_filepath,
             spell::Spell::Broadcast {conditions: conditions, keys: keys, expressions: expressions}));
 }
 
 
-fn puts_result(verbose: bool, output: String) {
-    if verbose {
+fn puts_result(silent: bool, output: String) {
+    if !silent {
         print!("{}", output);
     }
 }
@@ -218,7 +218,7 @@ fn puts_result(verbose: bool, output: String) {
 fn main() {
     let mut command = Command::summon;
     let mut args = vec!();
-    let mut verbose = false;
+    let mut silent = false;
     let mut socket_filepath: String = {
         let mut buf = home_dir().unwrap();
         buf.push(".stockings");
@@ -232,7 +232,7 @@ fn main() {
         ap.set_description("panty and stocking");
 
         ap.refer(&mut socket_filepath).add_option(&["--socket", "-s"], Store, "Socket file path");
-        ap.refer(&mut verbose).add_option(&["-V", "--verbose"], StoreTrue, "Print any messages");
+        ap.refer(&mut silent).add_option(&["-s", "--silent"], StoreTrue, "Shut up");
         ap.refer(&mut log_level).add_option(&["-l", "--log-level"], Store, "Log level");
 
         ap.refer(&mut command).required().add_argument("sub-command", Store, "summon|collector|renew|edit|tabedit|broadcast");
@@ -256,13 +256,13 @@ fn main() {
     }
 
     match command {
-        Command::summon => command_summon(verbose, socket_filepath, args),
+        Command::summon => command_summon(silent, socket_filepath, args),
         Command::collector => command_collector(socket_filepath, args),
-        Command::renew => command_renew(verbose, socket_filepath),
-        Command::edit => command_edit(verbose, socket_filepath, args, false),
-        Command::tabEdit => command_edit(verbose, socket_filepath, args, true),
+        Command::renew => command_renew(silent, socket_filepath),
+        Command::edit => command_edit(silent, socket_filepath, args, false),
+        Command::tabEdit => command_edit(silent, socket_filepath, args, true),
         Command::clean => command_clean(socket_filepath),
-        Command::broadcast => command_broadcast(verbose, socket_filepath, args),
+        Command::broadcast => command_broadcast(silent, socket_filepath, args),
     }
 }
 
