@@ -3,7 +3,7 @@ use core::iter::FromIterator;
 use std::collections::HashSet;
 use std::io::BufReader;
 use std::io::prelude::*;
-use std::process::{Command, Stdio, ChildStdout};
+use std::process::{Command, Stdio, ChildStdout, ChildStderr};
 use std::thread;
 use std::time::Duration;
 use x11::xlib::Window;
@@ -135,7 +135,7 @@ pub fn send_files(servername: &str, files: Vec<String>, tab: bool) {
 }
 
 
-pub fn remote(servername: &str, keys: &[String], expressions: &[String], use_output: bool) -> Option<BufReader<ChildStdout>> {
+pub fn remote(servername: &str, keys: &[String], expressions: &[String], use_output: bool) -> Option<(BufReader<ChildStdout>, BufReader<ChildStderr>)> {
     fn gen_args(name: &str, items: &[String]) -> Vec<String> {
         let buffer: Vec<Vec<String>> = items.iter().map(|it| vec![name.to_string(), it.to_string()]).collect();
         buffer.concat()
@@ -154,8 +154,11 @@ pub fn remote(servername: &str, keys: &[String], expressions: &[String], use_out
 
     let (pid, result) = if use_output {
         command.stdout(Stdio::piped());
+        command.stderr(Stdio::piped());
         let child = command.spawn().unwrap();
-        (child.id(), Some(BufReader::new(child.stdout.unwrap())))
+        let id = child.id();
+        let outputs = (BufReader::new(child.stdout.unwrap()), BufReader::new(child.stderr.unwrap()));
+        (id, Some(outputs))
     } else {
         (command.spawn().unwrap().id(), None)
     };

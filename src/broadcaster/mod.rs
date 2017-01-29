@@ -21,11 +21,13 @@ pub fn broadcast(stocks: collector::Stocks, conditions: lister::ConditionSet, ke
             let (keys, expressions, instance, buffer) = (keys.clone(), expressions.clone(), instance.clone(), buffer.clone());
 
             thread::spawn(move || {
-                gvim::remote(&instance.servername, &keys, &expressions, true).map(|mut reader| {
-                    let mut buffer = buffer.lock().unwrap();
+                gvim::remote(&instance.servername, &keys, &expressions, true).map(|(mut stdout, mut stderr)| {
+                    let ref mut buffer = buffer.lock().unwrap();
                     let mut output = String::new();
-                    reader.read_to_string(&mut output).unwrap();
-                    (*buffer).push_str(&*output);
+                    stdout.read_to_string(&mut output).unwrap();
+                    buffer.push_str(&output);
+                    stderr.read_to_string(&mut output).unwrap();
+                    buffer.push_str(&output);
                 })
             })
         }).collect();
