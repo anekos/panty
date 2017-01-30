@@ -21,7 +21,7 @@ inotify = "0.3"
 lazy_static = "0.2"
 libc = "0.2"
 log = "0.3"
-patrol = { git = "https://github.com/anekos/patrol.git", rev = "cd86beae095a864b793f0629b87ae97979419c9c" }
+patrol = "0.3.0"
 rand = "0.3"
 rustc-serialize = "0.3"
 unix_socket = "0.5"
