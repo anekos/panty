@@ -27,18 +27,25 @@ pub fn summon(servername: String, window: Window, options: SummonOptions) {
 
         trace!("summon: window = {}, desktop = {}, servername = {}", window, desktop, servername);
 
-        restore_window(display, window);
-        set_desktop_for_window(display, window, desktop);
+        let mut tried = 1;
 
-        if let Some(role) = options.role {
-            set_window_role(display, window, role.as_str())
-        } else {
-            set_window_role(display, window, &gvim::SUMMONED_WINDOW_ROLE);
+        loop {
+            restore_window(display, window);
+            set_desktop_for_window(display, window, desktop);
+
+            if let Some(ref role) = options.role {
+                set_window_role(display, window, role.as_str())
+            } else {
+                set_window_role(display, window, &gvim::SUMMONED_WINDOW_ROLE);
+            }
+
+             if wait_for_visible(display, window, 100) {
+                 break;
+             } else {
+                 error!("Failed: wait_for_visible: servername = {}, window = {}, tried = {}", servername, window, tried);
+                 tried += 1;
+             }
         }
-
-         if !wait_for_visible(display, window, 100) {
-             error!("Failed: wait_for_visible for {}", servername);
-         }
 
          gvim::send_files(&servername, options.files, false);
 
