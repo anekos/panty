@@ -26,6 +26,7 @@ pub fn broadcast(stocks: collector::Stocks, conditions: lister::ConditionSet, ke
                     let mut output = String::new();
                     stdout.read_to_string(&mut output).unwrap();
                     buffer.push_str(&output);
+                    output.clear();
                     stderr.read_to_string(&mut output).unwrap();
                     buffer.push_str(&output);
                 })
