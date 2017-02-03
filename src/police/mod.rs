@@ -6,11 +6,11 @@ use std::time::Duration;
 use walkdir::WalkDir;
 
 use collector;
-use gvim::SpawnOptions;
+use collector::RenewOptions;
 
 
 
-pub fn patrol(stocks: collector::Stocks, max_stocks: usize, targets: Vec<String>, rec_targets: Vec<String>, spawn_options: SpawnOptions) {
+pub fn patrol(stocks: collector::Stocks, targets: Vec<String>, rec_targets: Vec<String>, renew_options: RenewOptions) {
     let mut targets = targets;
 
     for target in rec_targets {
@@ -27,7 +27,7 @@ pub fn patrol(stocks: collector::Stocks, max_stocks: usize, targets: Vec<String>
         loop {
             rx.recv().unwrap();
 
-            collector::renew(stocks.clone(), max_stocks, spawn_options.clone());
+            collector::renew(stocks.clone(), renew_options.clone());
 
             while rx.recv_timeout(Duration::from_millis(100)).is_ok() {}
         }

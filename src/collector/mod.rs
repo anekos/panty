@@ -20,6 +20,12 @@ pub struct Stock {
 
 pub type Stocks = Arc<Mutex<VecDeque<Stock>>>;
 
+#[derive(Clone)]
+pub enum RenewOptions {
+    Reload {keys: Vec<String>},
+    Restart {max_stocks: usize, spawn_options: SpawnOptions},
+}
+
 
 
 pub fn collect(stocks: Stocks, n: usize, spawn_options: SpawnOptions) {
@@ -50,7 +56,7 @@ pub fn emit(stocks: Stocks) -> Stock {
 }
 
 
-pub fn renew(stocks: Stocks, max_stocks: usize, spawn_options: SpawnOptions) {
+fn renew_by_restart(stocks: Stocks, max_stocks: usize, spawn_options: SpawnOptions) {
     let killees: Vec<Window> = {
         let mut stocks = stocks.lock().unwrap();
         tap!(stocks.iter().map(|it| it.window).collect() => stocks.clear())
@@ -67,6 +73,23 @@ pub fn renew(stocks: Stocks, max_stocks: usize, spawn_options: SpawnOptions) {
         });
         collect(stocks, max_stocks, spawn_options);
     });
+}
+
+fn renew_by_reload(stocks: Stocks, keys: Vec<String>) {
+    let stocks = stocks.lock().unwrap();
+    for stock in stocks.iter() {
+        let servername = stock.servername.clone();
+        gvim::remote(&servername, keys.as_slice(), &[], false);
+    }
+}
+
+pub fn renew(stocks: Stocks, renew_options: RenewOptions) {
+    use self::RenewOptions::*;
+
+    match renew_options {
+        Restart {max_stocks, spawn_options} => renew_by_restart(stocks, max_stocks, spawn_options),
+        Reload {keys} => renew_by_reload(stocks, keys)
+    };
 }
 
 
