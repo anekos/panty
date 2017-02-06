@@ -54,7 +54,7 @@ impl FromStr for Command {
     }
 }
 
-const RELOAD_KEYS: &'static str = ":<C-u>source $MYVIMRC<CR>";
+const RELOAD_KEYS: &'static str = "<C-\\><C-n>:<C-u>source $MYVIMRC<CR>";
 
 
 fn command_summon(silent: bool, socket_filepath: &str, args: Vec<String>) {
