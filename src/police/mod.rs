@@ -27,6 +27,7 @@ pub fn patrol(stocks: collector::Stocks, max_stocks: usize, targets: Vec<String>
         loop {
             rx.recv().unwrap();
 
+            trace!("Renew stocked instances");
             collector::renew(stocks.clone(), max_stocks, spawn_options.clone());
 
             while rx.recv_timeout(Duration::from_millis(100)).is_ok() {}
