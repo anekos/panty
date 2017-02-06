@@ -54,6 +54,8 @@ impl FromStr for Command {
     }
 }
 
+const RELOAD_KEYS: &'static str = "<C-\\><C-n>:<C-u>source $MYVIMRC<CR>";
+
 
 fn command_summon(silent: bool, socket_filepath: &str, args: Vec<String>) {
 
@@ -99,6 +101,8 @@ fn command_collector(socket_filepath: &str, args: Vec<String>) {
     let mut gvim_command = "gvim".to_string();
     let mut unmap = true;
     let mut desktop = None;
+    let mut keys: Vec<String> = vec![];
+    let mut reload: bool = false;
 
     {
         let mut ap = ArgumentParser::new();
@@ -112,16 +116,34 @@ fn command_collector(socket_filepath: &str, args: Vec<String>) {
         ap.refer(&mut gvim_command).add_option(&["--gvim-command", "-g"], Store, "gVim command");
         ap.refer(&mut unmap).add_option(&["--no-unmap"], StoreFalse, "Do not unmap");
         ap.refer(&mut desktop).add_option(&["--desktop", "-d"], StoreOption, "Move spawned windows to the desktop (workspace)");
+        ap.refer(&mut keys).add_option(&["--send", "-s"], Collect, "Send key sequence to renew gVim instances");
+        ap.refer(&mut reload).add_option(&["--reload", "-r"], StoreTrue, "Send key sequence to reload $MYVIMRC");
 
         ap.parse(args, &mut stdout(), &mut stderr()).map_err(|x| std::process::exit(x)).unwrap();
     }
+
+    if reload {
+        keys.push(RELOAD_KEYS.to_string());
+    }
+
+    let spawn_options = SpawnOptions {current_directory: current_directory, command: gvim_command, unmap: unmap, desktop: desktop};
+
+    let renew_options = {
+        use panty::collector::RenewOptions;
+        if keys.len() == 0 {
+            RenewOptions::Restart { max_stocks: max_stocks, spawn_options: spawn_options.clone() }
+        } else {
+            RenewOptions::Reload { keys: keys }
+        }
+    };
 
     app::start(
         max_stocks,
         socket_filepath,
         watch_targets,
         recursive_watch_targets,
-        SpawnOptions {current_directory: current_directory, command: gvim_command, unmap: unmap, desktop: desktop});
+        renew_options,
+        spawn_options);
 }
 
 

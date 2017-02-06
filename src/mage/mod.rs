@@ -7,6 +7,7 @@ use std::thread;
 
 use summoner;
 use collector;
+use collector::RenewOptions;
 use broadcaster;
 use spell::Spell::*;
 use gvim::SpawnOptions;
@@ -39,8 +40,10 @@ pub fn meditate(stocks: collector::Stocks, max_stocks: usize, socket_filepath: &
                                     stream.write(output.as_bytes()).unwrap();
                                 });
                             }
-                            Renew =>
-                                collector::renew(stocks.clone(), max_stocks, spawn_options),
+                            Renew => {
+                                let renew_options = RenewOptions::Restart {max_stocks: max_stocks, spawn_options: spawn_options};
+                                collector::renew(stocks.clone(), renew_options);
+                            }
                             Clean =>
                                 collector::clean(stocks.clone())
                         }
