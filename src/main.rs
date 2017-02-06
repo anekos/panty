@@ -75,7 +75,7 @@ fn command_summon(silent: bool, socket_filepath: &str, args: Vec<String>) {
         ap.refer(&mut keys).add_option(&["--send", "-s"], Collect, "Send key sequence");
         ap.refer(&mut expressions).add_option(&["--expr", "-e"], Collect, "Evaluate the expression");
         ap.refer(&mut after).add_option(&["--after", "-a"], StoreOption, "Run the command after summon");
-        ap.refer(&mut before).add_option(&["--before", "-a"], StoreOption, "Run the command before summon");
+        ap.refer(&mut before).add_option(&["--before", "-b"], StoreOption, "Run the command before summon");
         ap.refer(&mut files).add_argument("arguments", List, "Files");
 
         ap.parse(args, &mut stdout(), &mut stderr()).map_err(|x| std::process::exit(x)).unwrap();
