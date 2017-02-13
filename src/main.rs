@@ -166,7 +166,7 @@ fn command_edit(silent: bool, socket_filepath: &str, args: Vec<String>, tab: boo
         ap.set_description("Send files to gVim");
 
         ap.refer(&mut files).add_argument("arguments", List, "Files");
-        ap.refer(&mut use_panty).add_option(&["--no-panty"], StoreFalse, "I am no panty user");
+        ap.refer(&mut use_panty).add_option(&["--no-panty", "-P"], StoreFalse, "I am no panty user");
 
         ap.parse(args, &mut stdout(), &mut stderr()).map_err(|x| std::process::exit(x)).unwrap();
     }
