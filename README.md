@@ -40,7 +40,7 @@ $ panty renew
 ## Output logs
 
 ```
-$ RUST_LOG=trace panty ...
+$ panty --log-level trace ...
 ```
 
 
