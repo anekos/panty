@@ -1,8 +1,6 @@
 
 extern crate panty;
 extern crate argparse;
-#[macro_use]
-extern crate log;
 extern crate env_logger;
 
 use argparse::{ArgumentParser, Store, StoreOption, List, Collect, StoreFalse, StoreTrue, Print};

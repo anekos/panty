@@ -3,8 +3,6 @@ extern crate x11;
 extern crate unix_socket;
 extern crate core;
 #[macro_use]
-extern crate lazy_static;
-#[macro_use]
 extern crate log;
 extern crate argparse;
 extern crate rustc_serialize;
