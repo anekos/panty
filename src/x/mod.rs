@@ -18,11 +18,16 @@ macro_rules! with_display {
     { $display:ident => $y:expr }  => {
         {
             use std::ptr::null;
+            use std::process::exit;
             use x11::xlib::{XOpenDisplay, XCloseDisplay, Display};
             use x::*;
 
             unsafe {
                 let $display: *mut Display = XOpenDisplay(null());
+                if $display.is_null() {
+                    error!("Could not open display");
+                    exit(1);
+                }
                 let result = {
                     $y
                 };
