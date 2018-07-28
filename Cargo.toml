@@ -1,6 +1,6 @@
 [package]
 name = "panty"
-version = "0.8.2"
+version = "0.8.3"
 authors = ["anekos <anekos@snca.net>"]
 repository = "https://github.com/anekos/panty"
 keywords = ["vim", "gvim", "linux"]
@@ -23,6 +23,7 @@ libc = "0.2"
 log = "0.3"
 patrol = "0.3.0"
 rand = "0.3"
+regex = "1.0.2"
 rustc-serialize = "0.3"
 unix_socket = "0.5"
 walkdir = "1.0.3"

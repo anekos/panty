@@ -5,11 +5,9 @@ extern crate env_logger;
 
 use argparse::{ArgumentParser, Store, StoreOption, List, Collect, StoreFalse, StoreTrue, Print};
 use env_logger::LogBuilder;
-use std::env::home_dir;
+use std::env::{home_dir, current_dir};
 use std::collections::HashSet;
-use std::fs;
 use std::io::{stdout, stderr};
-use std::path::PathBuf;
 use std::str::FromStr;
 
 use panty::*;
@@ -81,13 +79,13 @@ fn command_summon(silent: bool, socket_filepath: &str, args: Vec<String>) {
         ap.parse(args, &mut stdout(), &mut stderr()).map_err(|x| std::process::exit(x)).unwrap();
     }
 
-    let files: Vec<String> = files.iter().map(|it| to_absolute_path(it)).collect();
+    let working_directory = get_working_directory();
 
     puts_result(
         silent,
         spell::cast(
             socket_filepath,
-            spell::Spell::Summon {files: files, keys: keys, expressions: expressions, role: role, nofork: nofork, after: after, before: before}));
+            spell::Spell::Summon {working_directory, files: files, keys: keys, expressions: expressions, role: role, nofork: nofork, after: after, before: before}));
 }
 
 
@@ -169,15 +167,15 @@ fn command_edit(silent: bool, socket_filepath: &str, args: Vec<String>, tab: boo
         ap.parse(args, &mut stdout(), &mut stderr()).map_err(|x| std::process::exit(x)).unwrap();
     }
 
-    let files: Vec<String> = files.iter().map(|it| to_absolute_path(it)).collect();
+    let working_directory = get_working_directory();
 
     let servername =
-        sender::send_files(files.clone(), tab, use_panty).or_else(|| {
+        sender::send_files(&working_directory, files.clone(), tab, use_panty).or_else(|| {
             if use_panty {
                 Some(
                     spell::cast(
                         socket_filepath,
-                        spell::Spell::Summon {files: files, keys: vec![], expressions: vec![], role: None, nofork: false, after: None, before: None}))
+                        spell::Spell::Summon {working_directory, files: files, keys: vec![], expressions: vec![], role: None, nofork: false, after: None, before: None}))
             } else {
                 None
             }
@@ -287,7 +285,7 @@ fn main() {
 }
 
 
-fn to_absolute_path(path: &str) -> String {
-    let buf = PathBuf::from(path);
-    fs::canonicalize(buf).map(|it| it.to_str().unwrap().to_string()).unwrap_or(path.to_owned())
+fn get_working_directory() -> String {
+    let working_directory = current_dir().expect("cwd");
+    working_directory.to_str().unwrap().to_string()
 }

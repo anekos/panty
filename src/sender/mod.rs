@@ -5,7 +5,7 @@ use gvim;
 
 
 
-pub fn send_files(files: Vec<String>, tab: bool, use_panty: bool) -> Option<String> {
+pub fn send_files(working_directory: &str, files: Vec<String>, tab: bool, use_panty: bool) -> Option<String> {
     let instances = if use_panty {
         gvim::find_instances(true)
     } else {
@@ -20,7 +20,7 @@ pub fn send_files(files: Vec<String>, tab: bool, use_panty: bool) -> Option<Stri
         };
 
     if let Some(servername) = servername {
-        gvim::send_files(&servername, files, tab);
+        gvim::send_files(&servername, working_directory, files, tab);
         Some(servername)
     } else {
         None

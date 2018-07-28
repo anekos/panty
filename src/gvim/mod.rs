@@ -1,5 +1,8 @@
 
+extern crate regex;
+
 use core::iter::FromIterator;
+use libc;
 use std::collections::HashSet;
 use std::io::BufReader;
 use std::io::prelude::*;
@@ -7,7 +10,6 @@ use std::process::{Command, Stdio, ChildStdout, ChildStderr};
 use std::thread;
 use std::time::Duration;
 use x11::xlib::Window;
-use libc;
 
 use namer;
 
@@ -120,15 +122,17 @@ pub fn find_instances_without_panty(visibility: bool) -> Vec<Instance> {
 
 
 
-pub fn send_files(servername: &str, files: Vec<String>, tab: bool) {
+pub fn send_files(servername: &str, working_directory: &str, files: Vec<String>, tab: bool) {
     if files.is_empty() {
         return
     }
 
     let child = Command::new("gvim")
+        .current_dir(&working_directory)
         .arg("--servername")
         .arg(servername)
         .arg(if tab {"--remote-tab"} else {"--remote"})
+        .arg(format!("+cd {}", escape_str(working_directory)))
         .args(files.as_slice())
         .spawn().unwrap();
     zombie_killer(child.id());
@@ -271,6 +275,12 @@ where T: FromIterator<String> {
         .unwrap()
         .stdout;
     String::from_utf8(output).unwrap().lines().map(|it| it.to_string()).collect()
+}
+
+
+pub fn escape_str(s: &str) -> String {
+    let re = regex::Regex::new(r"[\\|#]").unwrap();
+    re.replace_all(s, "\\$0").to_string()
 }
 
 

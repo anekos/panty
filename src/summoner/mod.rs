@@ -7,6 +7,7 @@ use gvim;
 
 
 pub struct SummonOptions {
+    pub working_directory: String,
     pub files: Vec<String>,
     pub keys: Vec<String>,
     pub expressions: Vec<String>,
@@ -47,7 +48,7 @@ pub fn summon(servername: String, window: Window, options: SummonOptions) {
              }
         }
 
-         gvim::send_files(&servername, options.files, false);
+         gvim::send_files(&servername, &options.working_directory, options.files, false);
 
          gvim::remote(&servername, &options.keys, &options.expressions, false);
     });
