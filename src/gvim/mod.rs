@@ -31,8 +31,8 @@ pub struct Instance {
 }
 
 
-pub const STOCKED_WINDOW_ROLE: &'static str = "STOCKING";
-pub const SUMMONED_WINDOW_ROLE: &'static str = "PANTY";
+pub const STOCKED_WINDOW_ROLE: &str = "STOCKING";
+pub const SUMMONED_WINDOW_ROLE: &str = "PANTY";
 
 
 pub fn find_instances(visibility: bool) -> Vec<Instance> {
@@ -51,9 +51,9 @@ pub fn find_instances(visibility: bool) -> Vec<Instance> {
                     if let Some(servername) = get_text_property(display, window, "_PANTY_SERVERNAME") {
                         if let Some(title) = get_text_property(display, window, "WM_NAME") {
                             result.push(Instance {
-                                window: window,
                                 servername: servername.clone(),
-                                title: title
+                                title,
+                                window,
                             });
                         }
                     }
@@ -91,11 +91,7 @@ pub fn find_instances_without_panty(visibility: bool) -> Vec<Instance> {
                     if let Some(window) = fetch_window_id(&servername) {
                         if is_window_visible(display, window) == visibility {
                             if let Some(title) = get_text_property(display, window, "WM_NAME") {
-                                return Some(Instance{
-                                    window: window,
-                                    servername: servername,
-                                    title: title
-                                })
+                                return Some(Instance { window, servername, title })
                             }
                         }
                     }
@@ -122,7 +118,7 @@ pub fn find_instances_without_panty(visibility: bool) -> Vec<Instance> {
 
 
 
-pub fn send_files(servername: &str, working_directory: &str, files: Vec<String>, tab: bool) {
+pub fn send_files(servername: &str, working_directory: &str, files: &[&str], tab: bool) {
     if files.is_empty() {
         return
     }
@@ -133,7 +129,7 @@ pub fn send_files(servername: &str, working_directory: &str, files: Vec<String>,
         .arg(servername)
         .arg(if tab {"--remote-tab"} else {"--remote"})
         .arg(format!("+cd {}", escape_str(working_directory)))
-        .args(files.as_slice())
+        .args(files)
         .spawn().unwrap();
     zombie_killer(child.id());
 }

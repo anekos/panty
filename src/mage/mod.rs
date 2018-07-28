@@ -14,7 +14,7 @@ use gvim::SpawnOptions;
 
 
 
-pub fn meditate(stocks: collector::Stocks, max_stocks: usize, socket_filepath: &str, spawn_options: SpawnOptions) {
+pub fn meditate(stocks: &collector::Stocks, max_stocks: usize, socket_filepath: &str, spawn_options: &SpawnOptions) {
     let listener = UnixListener::bind(socket_filepath).unwrap();
 
     for stream in listener.incoming() {
@@ -28,24 +28,24 @@ pub fn meditate(stocks: collector::Stocks, max_stocks: usize, socket_filepath: &
                         match json::decode(buf.as_str()).expect("Fail: json::decode") {
                             Summon {working_directory, files, keys, expressions, after, before, role, nofork} =>
                                 summon(
-                                    stocks.clone(),
-                                    summoner::SummonOptions {working_directory, files: files, role: role, keys: keys, expressions: expressions, after: after, before: before},
-                                    spawn_options,
+                                    &stocks.clone(),
+                                    summoner::SummonOptions { working_directory, files, role, keys, expressions, after, before },
+                                    &spawn_options,
                                     nofork,
                                     stream),
                             Broadcast {keys, expressions, conditions} => {
                                 let stocks = stocks.clone();
                                 thread::spawn(move || {
-                                    let output = broadcaster::broadcast(stocks, conditions, keys, expressions);
-                                    stream.write(output.as_bytes()).unwrap();
+                                    let output = broadcaster::broadcast(stocks, &conditions, &keys, &expressions);
+                                    stream.write_all(output.as_bytes()).unwrap();
                                 });
                             }
                             Renew => {
-                                let renew_options = RenewOptions::Restart {max_stocks: max_stocks, spawn_options: spawn_options};
+                                let renew_options = RenewOptions::Restart { max_stocks, spawn_options };
                                 collector::renew(stocks.clone(), renew_options);
                             }
                             Clean =>
-                                collector::clean(stocks.clone())
+                                collector::clean(&stocks.clone())
                         }
                     }
                 }
@@ -61,13 +61,13 @@ pub fn meditate(stocks: collector::Stocks, max_stocks: usize, socket_filepath: &
 }
 
 
-fn summon(stocks: collector::Stocks, summon_options: summoner::SummonOptions, spawn_options: SpawnOptions, nofork: bool, mut stream: UnixStream) {
-    let stock = collector::emit(stocks.clone());
+fn summon(stocks: &collector::Stocks, summon_options: summoner::SummonOptions, spawn_options: &SpawnOptions, nofork: bool, mut stream: UnixStream) {
+    let stock = collector::emit(&stocks.clone());
     let mut stdout_reader = stock.stdout_reader;
     let servername = stock.servername;
 
-    summoner::summon(servername.clone(), stock.window, summon_options);
-    collector::collect(stocks.clone(), 1, spawn_options);
+    summoner::summon(&servername, stock.window, summon_options);
+    collector::collect(&stocks.clone(), 1, spawn_options);
 
     if nofork {
         thread::spawn(move || {

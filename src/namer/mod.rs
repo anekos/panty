@@ -16,7 +16,7 @@ pub fn name() -> String {
 ///                     (symbol-package s)))
 ///       (format t "~A~%"
 ///               (string-downcase s)))))
-const CL_SYMBOLS: [&'static str; 740] = [
+const CL_SYMBOLS: [&str; 740] = [
     "ABORT",
     "ABS",
     "ACONS",

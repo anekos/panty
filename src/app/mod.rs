@@ -13,15 +13,15 @@ use mage;
 use gvim::SpawnOptions;
 
 
-pub fn start(max_stocks: usize, socket_filepath: &str, watch_targets: Vec<String>, recursive_watch_targets: Vec<String>, renew_options: RenewOptions, spawn_options: SpawnOptions) {
+pub fn start(max_stocks: usize, socket_filepath: &str, watch_targets: Vec<String>, recursive_watch_targets: Vec<String>, renew_options: RenewOptions, spawn_options: &SpawnOptions) {
     let stocks: collector::Stocks = Arc::new(Mutex::new(VecDeque::new()));
 
     initialize(socket_filepath);
 
-    collector::collect(stocks.clone(), max_stocks, spawn_options.clone());
+    collector::collect(&stocks.clone(), max_stocks, &spawn_options.clone());
     police::patrol(stocks.clone(), watch_targets, recursive_watch_targets, renew_options);
     executioner::watch(stocks.clone(), socket_filepath.to_string());
-    mage::meditate(stocks.clone(), max_stocks, socket_filepath, spawn_options.clone());
+    mage::meditate(&stocks.clone(), max_stocks, socket_filepath, &spawn_options.clone());
 }
 
 

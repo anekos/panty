@@ -9,8 +9,8 @@ use lister;
 
 
 
-pub fn broadcast(stocks: collector::Stocks, conditions: lister::ConditionSet, keys: Vec<String>, expressions: Vec<String>) -> String {
-    let instances = lister::list(Some(stocks), conditions);
+pub fn broadcast(stocks: collector::Stocks, conditions: &lister::ConditionSet, keys: &[String], expressions: &[String]) -> String {
+    let instances = lister::list(&Some(stocks), conditions);
 
     let buffer = Arc::new(Mutex::new(String::new()));
 
@@ -18,11 +18,11 @@ pub fn broadcast(stocks: collector::Stocks, conditions: lister::ConditionSet, ke
         instances.iter().map(|instance| {
             trace!("broadcast: {}", instance.servername);
 
-            let (keys, expressions, instance, buffer) = (keys.clone(), expressions.clone(), instance.clone(), buffer.clone());
+            let (keys, expressions, instance, buffer) = (keys.to_vec(), expressions.to_vec(), instance.clone(), buffer.clone());
 
             thread::spawn(move || {
                 gvim::remote(&instance.servername, &keys, &expressions, true).map(|(mut stdout, mut stderr)| {
-                    let ref mut buffer = buffer.lock().unwrap();
+                    let buffer = &mut buffer.lock().unwrap();
                     let mut output = String::new();
                     stdout.read_to_string(&mut output).unwrap();
                     buffer.push_str(&output);

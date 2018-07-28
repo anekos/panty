@@ -1,5 +1,6 @@
 
 use std::collections::HashSet;
+use std::hash::BuildHasher;
 use std::thread;
 
 use gvim;
@@ -38,15 +39,15 @@ pub fn parse_condition(s: &str) -> Result<ConditionSet, String> {
 
 
 
-pub fn list(stocks: Option<Stocks>, conditions: HashSet<Condition>) -> Vec<gvim::Instance> {
+pub fn list<S: BuildHasher + Clone + Send + 'static>(stocks: &Option<Stocks>, conditions: &HashSet<Condition, S>) -> Vec<gvim::Instance> {
     let servernames: Vec<String> = gvim::fetch_existing_servernames();
 
     let join_handles: Vec<_> = servernames.iter()
         .map(|servername| {
-            let servername = servername.clone();
+            let servername = servername.to_owned();
             let conditions = conditions.clone();
             let stocks = stocks.clone();
-            thread::spawn(move || condition_match(stocks, conditions, servername))
+            thread::spawn(move || condition_match(stocks, conditions, &servername))
         })
         .collect();
 
@@ -67,10 +68,7 @@ pub fn list(stocks: Option<Stocks>, conditions: HashSet<Condition>) -> Vec<gvim:
 }
 
 
-fn condition_match(stocks: Option<Stocks>,
-                   conditions: HashSet<Condition>,
-                   servername: String)
-                   -> Option<gvim::Instance> {
+fn condition_match<S: BuildHasher + Clone + Send>(stocks: Option<Stocks>, conditions: HashSet<Condition, S>, servername: &str) -> Option<gvim::Instance> {
     use self::Condition::*;
 
     let stocked_servers: HashSet<String> = if let Some(stocks) = stocks {
@@ -97,10 +95,10 @@ fn condition_match(stocks: Option<Stocks>,
 
             if matched {
                 if let Some(title) = get_text_property(display, window, "WM_NAME") {
-                    return Some(gvim::Instance{
-                        window: window,
+                    return Some(gvim::Instance {
                         servername: servername.to_owned(),
-                        title: title
+                        title,
+                        window,
                     })
                 }
             }
