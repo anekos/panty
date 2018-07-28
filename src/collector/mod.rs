@@ -28,7 +28,7 @@ pub enum RenewOptions {
 
 
 
-pub fn collect(stocks: Stocks, n: usize, spawn_options: SpawnOptions) {
+pub fn collect(stocks: &Stocks, n: usize, spawn_options: &SpawnOptions) {
     let names = gvim::new_servernames(n);
     for servername in names {
         let stocks = stocks.clone();
@@ -37,14 +37,14 @@ pub fn collect(stocks: Stocks, n: usize, spawn_options: SpawnOptions) {
             let (window, stdout) = gvim::spawn_secretly(&servername, &spawn_options);
             {
                 let mut stocks = stocks.lock().unwrap();
-                stocks.push_back(Stock {window: window, servername: servername, stdout_reader: stdout});
+                stocks.push_back(Stock { window, servername, stdout_reader: stdout });
             }
         });
     }
 }
 
 
-pub fn emit(stocks: Stocks) -> Stock {
+pub fn emit(stocks: &Stocks) -> Stock {
     loop {
         {
             let mut m_stocks = stocks.lock().unwrap();
@@ -62,8 +62,6 @@ fn renew_by_restart(stocks: Stocks, max_stocks: usize, spawn_options: SpawnOptio
         tap!(stocks.iter().map(|it| it.window).collect() => stocks.clear())
     };
 
-    let spawn_options = spawn_options.clone();
-
     thread::spawn(move || {
         with_display!(display => {
             for killee in killees {
@@ -71,15 +69,15 @@ fn renew_by_restart(stocks: Stocks, max_stocks: usize, spawn_options: SpawnOptio
                 kill_window(display, killee);
             }
         });
-        collect(stocks, max_stocks, spawn_options);
+        collect(&stocks, max_stocks, &spawn_options);
     });
 }
 
-fn renew_by_reload(stocks: Stocks, keys: Vec<String>) {
+fn renew_by_reload(stocks: &Stocks, keys: &[String]) {
     let stocks = stocks.lock().unwrap();
     for stock in stocks.iter() {
         let servername = stock.servername.clone();
-        gvim::remote(&servername, keys.as_slice(), &[], false);
+        gvim::remote(&servername, keys, &[], false);
     }
 }
 
@@ -88,12 +86,12 @@ pub fn renew(stocks: Stocks, renew_options: RenewOptions) {
 
     match renew_options {
         Restart {max_stocks, spawn_options} => renew_by_restart(stocks, max_stocks, spawn_options),
-        Reload {keys} => renew_by_reload(stocks, keys)
+        Reload {ref keys} => renew_by_reload(&stocks, keys)
     };
 }
 
 
-pub fn clean(stocks: Stocks) {
+pub fn clean(stocks: &Stocks) {
     let current_stocks: HashSet<Window> = {
         let stocks = stocks.lock().unwrap();
         stocks.iter().map(|it| it.window).collect()

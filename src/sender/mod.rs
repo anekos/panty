@@ -5,7 +5,7 @@ use gvim;
 
 
 
-pub fn send_files(working_directory: &str, files: Vec<String>, tab: bool, use_panty: bool) -> Option<String> {
+pub fn send_files(working_directory: &str, files: &[&str], tab: bool, use_panty: bool) -> Option<String> {
     let instances = if use_panty {
         gvim::find_instances(true)
     } else {

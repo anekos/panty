@@ -17,7 +17,7 @@ pub struct SummonOptions {
 }
 
 
-pub fn summon(servername: String, window: Window, options: SummonOptions) {
+pub fn summon(servername: &str, window: Window, options: SummonOptions) {
 
     if let Some(command_line) = options.before {
         after(&command_line, &servername, window);
@@ -48,13 +48,14 @@ pub fn summon(servername: String, window: Window, options: SummonOptions) {
              }
         }
 
-         gvim::send_files(&servername, &options.working_directory, options.files, false);
+        let files: Vec<&str> = options.files.iter().map(String::as_ref).collect();
+        gvim::send_files(servername, &options.working_directory, &files, false);
 
-         gvim::remote(&servername, &options.keys, &options.expressions, false);
+        gvim::remote(servername, &options.keys, &options.expressions, false);
     });
 
     if let Some(command_line) = options.after {
-        after(&command_line, &servername, window);
+        after(&command_line, servername, window);
     }
 }
 
@@ -66,6 +67,6 @@ pub fn after(command_line: &str, servername: &str, window: Window) {
         .env("PANTY_WINDOWID", window.to_string())
         .env("PANTY_SERVERNAME", servername)
         .spawn()
-        .expect(&*format!("Failed to run: {}", command_line));
+        .unwrap_or_else(|_| panic!("Failed to run: {}", command_line));
     child.wait().unwrap();
 }

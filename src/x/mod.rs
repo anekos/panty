@@ -229,11 +229,11 @@ pub fn set_desktop_for_window(display: *mut Display, window: Window, desktop: i6
             type_: ClientMessage,
             serial: 0,
             send_event: 0,
-            display: display,
-            window: window,
+            display,
+            window,
             message_type: wm_desktop,
             format: 32,
-            data: data
+            data,
         };
 
         XSendEvent(
@@ -274,7 +274,7 @@ pub fn get_current_desktop(display: *mut Display) ->  i64 {
             &mut prop);
 
         if n_items > 0 {
-            *(prop as *mut i64)
+            i64::from(*prop)
         } else {
             panic!("Fail: _NET_CURRENT_DESKTOP")
         }

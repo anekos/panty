@@ -50,7 +50,7 @@ impl FromStr for Command {
     }
 }
 
-const RELOAD_KEYS: &'static str = "<C-\\><C-n>:<C-u>source $MYVIMRC<CR>";
+const RELOAD_KEYS: &str = "<C-\\><C-n>:<C-u>source $MYVIMRC<CR>";
 
 
 fn command_summon(silent: bool, socket_filepath: &str, args: Vec<String>) {
@@ -83,9 +83,9 @@ fn command_summon(silent: bool, socket_filepath: &str, args: Vec<String>) {
 
     puts_result(
         silent,
-        spell::cast(
+        &spell::cast(
             socket_filepath,
-            spell::Spell::Summon {working_directory, files: files, keys: keys, expressions: expressions, role: role, nofork: nofork, after: after, before: before}));
+            &spell::Spell::Summon { working_directory, files, keys, expressions, role, nofork, after, before }));
 }
 
 
@@ -122,14 +122,14 @@ fn command_collector(socket_filepath: &str, args: Vec<String>) {
         keys.push(RELOAD_KEYS.to_string());
     }
 
-    let spawn_options = SpawnOptions {current_directory: current_directory, command: gvim_command, unmap: unmap, desktop: desktop};
+    let spawn_options = SpawnOptions { current_directory, command: gvim_command, unmap, desktop };
 
     let renew_options = {
         use panty::collector::RenewOptions;
-        if keys.len() == 0 {
-            RenewOptions::Restart { max_stocks: max_stocks, spawn_options: spawn_options.clone() }
+        if keys.is_empty() {
+            RenewOptions::Restart { max_stocks, spawn_options: spawn_options.clone() }
         } else {
-            RenewOptions::Reload { keys: keys }
+            RenewOptions::Reload { keys }
         }
     };
 
@@ -139,16 +139,14 @@ fn command_collector(socket_filepath: &str, args: Vec<String>) {
         watch_targets,
         recursive_watch_targets,
         renew_options,
-        spawn_options);
+        &spawn_options);
 }
 
 
 fn command_renew(silent: bool, socket_filepath: &str) {
     puts_result(
         silent,
-        spell::cast(
-            socket_filepath,
-            spell::Spell::Renew));
+        &spell::cast(socket_filepath, &spell::Spell::Renew));
 }
 
 
@@ -169,20 +167,24 @@ fn command_edit(silent: bool, socket_filepath: &str, args: Vec<String>, tab: boo
 
     let working_directory = get_working_directory();
 
-    let servername =
-        sender::send_files(&working_directory, files.clone(), tab, use_panty).or_else(|| {
+    let servername = {
+        {
+            let ref_files: Vec<&str> = files.iter().map(String::as_ref).collect();
+            sender::send_files(&working_directory, &ref_files, tab, use_panty)
+        } .or_else(move || {
             if use_panty {
                 Some(
                     spell::cast(
                         socket_filepath,
-                        spell::Spell::Summon {working_directory, files: files, keys: vec![], expressions: vec![], role: None, nofork: false, after: None, before: None}))
+                        &spell::Spell::Summon {working_directory, files, keys: vec![], expressions: vec![], role: None, nofork: false, after: None, before: None}))
             } else {
                 None
             }
-        });
+        })
+    };
 
     if let Some(servername) = servername {
-        puts_result(silent, servername);
+        puts_result(silent, &servername);
     }
 }
 
@@ -190,7 +192,7 @@ fn command_edit(silent: bool, socket_filepath: &str, args: Vec<String>, tab: boo
 fn command_clean(socket_filepath: &str) {
     spell::cast(
         socket_filepath,
-        spell::Spell::Clean);
+        &spell::Spell::Clean);
 }
 
 
@@ -220,13 +222,11 @@ fn command_broadcast(silent: bool, socket_filepath: &str, args: Vec<String>) {
 
     puts_result(
         silent,
-        spell::cast(
-            socket_filepath,
-            spell::Spell::Broadcast {conditions: conditions, keys: keys, expressions: expressions}));
+        &spell::cast( socket_filepath, &spell::Spell::Broadcast { conditions, keys, expressions }));
 }
 
 
-fn puts_result(silent: bool, output: String) {
+fn puts_result(silent: bool, output: &str) {
     if !silent {
         print!("{}", output);
     }
