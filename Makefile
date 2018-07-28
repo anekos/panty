@@ -1,9 +1,4 @@
 
-
-test:
-	cargo build --verbose
-	./scripts/test_run
-
 build:
 	cargo build
 
@@ -12,6 +7,10 @@ doc:
 
 release:
 	cargo build --release
+
+test:
+	cargo build --verbose
+	./scripts/test_run
 
 publish:
 	cargo package
