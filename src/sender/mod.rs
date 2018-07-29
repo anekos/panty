@@ -20,7 +20,7 @@ pub fn send_files(working_directory: &str, files: &[&str], tab: bool, use_panty:
         };
 
     if let Some(servername) = servername {
-        gvim::send_files(&servername, working_directory, files, tab);
+        gvim::send_files(&servername, working_directory, files, tab, false);
         Some(servername)
     } else {
         None

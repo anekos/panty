@@ -7,13 +7,14 @@ use gvim;
 
 
 pub struct SummonOptions {
-    pub working_directory: String,
+    pub after: Option<String>,
+    pub before: Option<String>,
+    pub change_directory: bool,
+    pub expressions: Vec<String>,
     pub files: Vec<String>,
     pub keys: Vec<String>,
-    pub expressions: Vec<String>,
     pub role: Option<String>,
-    pub after: Option<String>,
-    pub before: Option<String>
+    pub working_directory: String,
 }
 
 
@@ -49,7 +50,7 @@ pub fn summon(servername: &str, window: Window, options: SummonOptions) {
         }
 
         let files: Vec<&str> = options.files.iter().map(String::as_ref).collect();
-        gvim::send_files(servername, &options.working_directory, &files, false);
+        gvim::send_files(servername, &options.working_directory, &files, false, options.change_directory);
 
         gvim::remote(servername, &options.keys, &options.expressions, false);
     });

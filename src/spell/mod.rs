@@ -9,8 +9,22 @@ use lister;
 
 #[derive(RustcEncodable, RustcDecodable, Clone, Debug)]
 pub enum Spell {
-    Summon {working_directory: String, files: Vec<String>, keys: Vec<String>, expressions: Vec<String>, after: Option<String>, before: Option<String>, role: Option<String>, nofork: bool},
-    Broadcast {conditions: lister::ConditionSet, keys: Vec<String>, expressions: Vec<String>},
+    Summon {
+        after: Option<String>,
+        before: Option<String>,
+        change_directory: bool,
+        expressions: Vec<String>,
+        files: Vec<String>,
+        keys: Vec<String>,
+        nofork: bool,
+        role: Option<String>,
+        working_directory: String,
+    },
+    Broadcast {
+        conditions: lister::ConditionSet,
+        keys: Vec<String>,
+        expressions: Vec<String>
+    },
     Renew,
     Clean
 }

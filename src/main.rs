@@ -62,6 +62,7 @@ fn command_summon(silent: bool, socket_filepath: &str, args: Vec<String>) {
     let mut after: Option<String> = None;
     let mut before: Option<String> = None;
     let mut nofork: bool = false;
+    let mut change_directory: bool = false;
 
     {
         let mut ap = ArgumentParser::new();
@@ -74,6 +75,7 @@ fn command_summon(silent: bool, socket_filepath: &str, args: Vec<String>) {
         ap.refer(&mut expressions).add_option(&["--expr", "-e"], Collect, "Evaluate the expression");
         ap.refer(&mut after).add_option(&["--after", "-a"], StoreOption, "Run the command after summon");
         ap.refer(&mut before).add_option(&["--before", "-b"], StoreOption, "Run the command before summon");
+        ap.refer(&mut change_directory).add_option(&["--cd", "-d"], StoreTrue, "Change directory to current directory");
         ap.refer(&mut files).add_argument("arguments", List, "Files");
 
         ap.parse(args, &mut stdout(), &mut stderr()).map_err(|x| std::process::exit(x)).unwrap();
@@ -85,7 +87,7 @@ fn command_summon(silent: bool, socket_filepath: &str, args: Vec<String>) {
         silent,
         &spell::cast(
             socket_filepath,
-            &spell::Spell::Summon { working_directory, files, keys, expressions, role, nofork, after, before }));
+            &spell::Spell::Summon { after, before, change_directory, expressions, files, keys, nofork, role, working_directory }));
 }
 
 
@@ -176,7 +178,17 @@ fn command_edit(silent: bool, socket_filepath: &str, args: Vec<String>, tab: boo
                 Some(
                     spell::cast(
                         socket_filepath,
-                        &spell::Spell::Summon {working_directory, files, keys: vec![], expressions: vec![], role: None, nofork: false, after: None, before: None}))
+                        &spell::Spell::Summon {
+                            working_directory,
+                            files,
+                            keys: vec![],
+                            expressions: vec![],
+                            role: None,
+                            nofork: false,
+                            after: None,
+                            before: None,
+                            change_directory: false
+                        }))
             } else {
                 None
             }
