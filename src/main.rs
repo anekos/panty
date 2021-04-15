@@ -155,6 +155,7 @@ fn command_renew(silent: bool, socket_filepath: &str) {
 fn command_edit(silent: bool, socket_filepath: &str, args: Vec<String>, tab: bool) {
     let mut files: Vec<String> = vec![];
     let mut use_panty: bool = true;
+    let mut change_directory: bool = false;
 
     {
         let mut ap = ArgumentParser::new();
@@ -163,6 +164,7 @@ fn command_edit(silent: bool, socket_filepath: &str, args: Vec<String>, tab: boo
 
         ap.refer(&mut files).add_argument("arguments", List, "Files");
         ap.refer(&mut use_panty).add_option(&["--no-panty", "-P"], StoreFalse, "I am no panty user");
+        ap.refer(&mut change_directory).add_option(&["--cd", "-d"], StoreTrue, "Change directory to current directory");
 
         ap.parse(args, &mut stdout(), &mut stderr()).map_err(|x| std::process::exit(x)).unwrap();
     }
@@ -187,7 +189,7 @@ fn command_edit(silent: bool, socket_filepath: &str, args: Vec<String>, tab: boo
                             nofork: false,
                             after: None,
                             before: None,
-                            change_directory: false
+                            change_directory,
                         }))
             } else {
                 None
