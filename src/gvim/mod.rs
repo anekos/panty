@@ -119,19 +119,25 @@ pub fn find_instances_without_panty(visibility: bool) -> Vec<Instance> {
 
 
 pub fn send_files(servername: &str, working_directory: &str, files: &[&str], tab: bool, change_directory: bool) {
-    if files.is_empty() {
-        return
-    }
-
     let mut child = Command::new("gvim");
+    child.current_dir(&working_directory);
 
-    child.current_dir(&working_directory)
-        .arg("--servername")
-        .arg(servername)
-        .arg(if tab {"--remote-tab"} else {"--remote"});
-
-    if change_directory {
-        child.arg(format!("+cd {}", escape_str(working_directory)));
+    if files.is_empty() {
+        if change_directory {
+            child.arg("--servername")
+                .arg(servername)
+                .arg("--remote-expr")
+                .arg(format!("execute('cd {}')", escape_str(working_directory)));
+        } else {
+            return
+        }
+    } else {
+        child.arg("--servername")
+            .arg(servername)
+            .arg(if tab {"--remote-tab"} else {"--remote"});
+        if change_directory {
+            child.arg(format!("+cd {}", escape_str(working_directory)));
+        }
     }
 
     let spawned = child.args(files).spawn().unwrap();
