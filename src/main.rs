@@ -1,14 +1,17 @@
 
-extern crate panty;
 extern crate argparse;
+extern crate dirs;
 extern crate env_logger;
+extern crate panty;
 
 use argparse::{ArgumentParser, Store, StoreOption, List, Collect, StoreFalse, StoreTrue, Print};
 use env_logger::LogBuilder;
-use std::env::{home_dir, current_dir};
+use std::env::current_dir;
 use std::collections::HashSet;
 use std::io::{stdout, stderr};
 use std::str::FromStr;
+
+use dirs::home_dir;
 
 use panty::*;
 use panty::gvim::SpawnOptions;
