@@ -27,4 +27,4 @@ regex = "1.0.2"
 rustc-serialize = "0.3"
 unix_socket = "0.5"
 walkdir = "1.0.3"
-x11 = { version = "2.11", features = ["xlib", "xinerama"] }
+x11 = { version = "2.18.2", features = ["xlib", "xinerama"] }

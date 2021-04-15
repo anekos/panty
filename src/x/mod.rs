@@ -47,23 +47,24 @@ pub fn wait_for_kill(display: *mut Display, window: Window) {
 }
 
 
-pub fn fetch_all_windows(display: *mut Display) -> Vec<u64> {
+pub fn fetch_all_windows(display: *mut Display) -> Vec<Window> {
     unsafe {
-        let mut dummy: Window = zeroed();
+        let mut root_return: Window = zeroed();
+        let mut parent_return: Window = zeroed();
         let root = XDefaultRootWindow(display);
-        let mut p_children: *mut Window = zeroed();
-        let mut n_children: u32 = 0;
-        XQueryTree(display, root, &mut dummy, &mut dummy, &mut p_children, &mut n_children);
+        let mut children_return: *mut Window = zeroed();
+        let mut n_children_return: u32 = 0;
+        // Status XQueryTree(display, w, root_return, parent_return, children_return, nchildren_return)
+        // XQueryTree: unsafe extern "C" fn(_: *mut Display, _: c_ulong, _: *mut c_ulong, _: *mut c_ulong, _: *mut *mut c_ulong, _: *mut c_uint) -> c_int
+        let r = XQueryTree(display, root, &mut root_return, &mut parent_return, &mut children_return, &mut n_children_return);
 
-        if n_children == 0 {
+        if r == 0 || n_children_return == 0 {
             return vec![];
         }
 
-        let children = Vec::from_raw_parts(p_children as *mut Window, n_children as usize, n_children as usize);
-
-        XFree(p_children as *mut c_void);
-
-        children
+        Vec::from_raw_parts(children_return as *mut Window, n_children_return as usize, n_children_return as usize)
+        // XFree(children_return as *mut c_void);
+        // children
     }
 }
 
