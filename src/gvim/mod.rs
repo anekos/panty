@@ -122,31 +122,35 @@ pub fn send_files(servername: &str, working_directory: &str, files: &[&str], env
     let mut child = Command::new("gvim");
     child.current_dir(&working_directory);
 
+    fn attach_envs(cmd: &mut Command, envs: &[(String, String)]) {
+        for chunk in envs.chunks(10) {
+            cmd.arg("--remote-expr");
+            let mut buf = "0".to_owned();
+            for (key, value) in chunk {
+                buf.push_str(&format!("+setenv('{}', '{}')", key, escape_str_in_expression(value)));
+            }
+            cmd.arg(&buf);
+        }
+    }
+
     if files.is_empty() {
         if change_directory {
             child.arg("--servername")
                 .arg(servername)
-                .arg("--remote-expr")
-                .arg(format!("execute('cd {}')", escape_str_in_command(working_directory)));
+                .arg("--remote-expr");
+            attach_envs(&mut child, envs);
+            child.arg(format!("execute('cd {}')", escape_str_in_command(working_directory)));
         } else {
             return
         }
     } else {
         child.arg("--servername")
-            .arg(servername)
-            .arg(if tab {"--remote-tab"} else {"--remote"});
+            .arg(servername);
+        attach_envs(&mut child, envs);
+        child.arg(if tab {"--remote-tab"} else {"--remote"});
         if change_directory {
             child.arg(format!("+cd {}", escape_str_in_command(working_directory)));
         }
-    }
-
-    for chunk in envs.chunks(10) {
-        child.arg("--remote-expr");
-        let mut buf = "0".to_owned();
-        for (key, value) in chunk {
-            buf.push_str(&format!("+setenv('{}', '{}')", key, escape_str_in_expression(value)));
-        }
-        child.arg(&buf);
     }
 
     let spawned = child.args(files).spawn().unwrap();
