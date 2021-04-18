@@ -6,8 +6,9 @@ extern crate panty;
 
 use argparse::{ArgumentParser, Store, StoreOption, List, Collect, StoreFalse, StoreTrue, Print};
 use env_logger::LogBuilder;
-use std::env::current_dir;
 use std::collections::HashSet;
+use std::env::current_dir;
+use std::env;
 use std::io::{stdout, stderr};
 use std::str::FromStr;
 
@@ -57,40 +58,55 @@ const RELOAD_KEYS: &str = "<C-\\><C-n>:<C-u>source $MYVIMRC<CR>";
 
 
 fn command_summon(silent: bool, socket_filepath: &str, args: Vec<String>) {
-
-    let mut role = None;
-    let mut files: Vec<String> = vec![];
-    let mut keys: Vec<String> = vec![];
-    let mut expressions: Vec<String> = vec![];
     let mut after: Option<String> = None;
     let mut before: Option<String> = None;
-    let mut nofork: bool = false;
     let mut change_directory: bool = false;
+    let mut expressions: Vec<String> = vec![];
+    let mut files: Vec<String> = vec![];
+    let mut keys: Vec<String> = vec![];
+    let mut nofork: bool = false;
+    let mut pass_all_envs: bool = false;
+    let mut pass_envs: Vec<String> = vec![];
+    let mut role = None;
 
     {
         let mut ap = ArgumentParser::new();
 
         ap.set_description("Summon gVim window");
 
-        ap.refer(&mut role).add_option(&["--role", "-r"], StoreOption, "Set window role");
-        ap.refer(&mut nofork).add_option(&["--nofork", "-n"], StoreTrue, "Emulation gVim's --nofork");
-        ap.refer(&mut keys).add_option(&["--send", "-s"], Collect, "Send key sequence");
-        ap.refer(&mut expressions).add_option(&["--expr", "-e"], Collect, "Evaluate the expression");
         ap.refer(&mut after).add_option(&["--after", "-a"], StoreOption, "Run the command after summon");
         ap.refer(&mut before).add_option(&["--before", "-b"], StoreOption, "Run the command before summon");
         ap.refer(&mut change_directory).add_option(&["--cd", "-d"], StoreTrue, "Change directory to current directory");
+        ap.refer(&mut expressions).add_option(&["--expr", "-e"], Collect, "Evaluate the expression");
         ap.refer(&mut files).add_argument("arguments", List, "Files");
+        ap.refer(&mut keys).add_option(&["--send", "-s"], Collect, "Send key sequence");
+        ap.refer(&mut nofork).add_option(&["--nofork", "-n"], StoreTrue, "Emulation gVim's --nofork");
+        ap.refer(&mut pass_all_envs).add_option(&["--all-envs"], StoreTrue, "Pass all current env to remote");
+        ap.refer(&mut pass_envs).add_option(&["--env", "-E"], Collect, "Pass the env");
+        ap.refer(&mut role).add_option(&["--role", "-r"], StoreOption, "Set window role");
 
         ap.parse(args, &mut stdout(), &mut stderr()).map_err(|x| std::process::exit(x)).unwrap();
     }
 
     let working_directory = get_working_directory();
 
+    let mut envs: Vec<(String, String)> = vec![];
+    if pass_all_envs {
+        for (key, value) in env::vars() {
+            envs.push((key, value));
+        }
+    }
+    for key in &pass_envs {
+        if let Ok(v) = env::var(key) {
+            envs.push((key.to_owned(), v));
+        }
+    }
+
     puts_result(
         silent,
         &spell::cast(
             socket_filepath,
-            &spell::Spell::Summon { after, before, change_directory, expressions, files, keys, nofork, role, working_directory }));
+            &spell::Spell::Summon { after, before, change_directory, envs, expressions, files, keys, nofork, role, working_directory }));
 }
 
 
@@ -187,6 +203,7 @@ fn command_edit(silent: bool, socket_filepath: &str, args: Vec<String>, tab: boo
                             working_directory,
                             files,
                             keys: vec![],
+                            envs: vec![], // FIXME ?
                             expressions: vec![],
                             role: None,
                             nofork: false,

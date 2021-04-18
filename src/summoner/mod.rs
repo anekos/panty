@@ -10,6 +10,7 @@ pub struct SummonOptions {
     pub after: Option<String>,
     pub before: Option<String>,
     pub change_directory: bool,
+    pub envs: Vec<(String, String)>,
     pub expressions: Vec<String>,
     pub files: Vec<String>,
     pub keys: Vec<String>,
@@ -50,7 +51,7 @@ pub fn summon(servername: &str, window: Window, options: SummonOptions) {
         }
 
         let files: Vec<&str> = options.files.iter().map(String::as_ref).collect();
-        gvim::send_files(servername, &options.working_directory, &files, false, options.change_directory);
+        gvim::send_files(servername, &options.working_directory, &files, &options.envs, false, options.change_directory);
 
         gvim::remote(servername, &options.keys, &options.expressions, false);
     });

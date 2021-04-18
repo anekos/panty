@@ -118,7 +118,7 @@ pub fn find_instances_without_panty(visibility: bool) -> Vec<Instance> {
 
 
 
-pub fn send_files(servername: &str, working_directory: &str, files: &[&str], tab: bool, change_directory: bool) {
+pub fn send_files(servername: &str, working_directory: &str, files: &[&str], envs: &[(String, String)], tab: bool, change_directory: bool) {
     let mut child = Command::new("gvim");
     child.current_dir(&working_directory);
 
@@ -127,7 +127,7 @@ pub fn send_files(servername: &str, working_directory: &str, files: &[&str], tab
             child.arg("--servername")
                 .arg(servername)
                 .arg("--remote-expr")
-                .arg(format!("execute('cd {}')", escape_str(working_directory)));
+                .arg(format!("execute('cd {}')", escape_str_in_command(working_directory)));
         } else {
             return
         }
@@ -136,8 +136,17 @@ pub fn send_files(servername: &str, working_directory: &str, files: &[&str], tab
             .arg(servername)
             .arg(if tab {"--remote-tab"} else {"--remote"});
         if change_directory {
-            child.arg(format!("+cd {}", escape_str(working_directory)));
+            child.arg(format!("+cd {}", escape_str_in_command(working_directory)));
         }
+    }
+
+    for chunk in envs.chunks(10) {
+        child.arg("--remote-expr");
+        let mut buf = "0".to_owned();
+        for (key, value) in chunk {
+            buf.push_str(&format!("+setenv('{}', '{}')", key, escape_str_in_expression(value)));
+        }
+        child.arg(&buf);
     }
 
     let spawned = child.args(files).spawn().unwrap();
@@ -284,11 +293,22 @@ where T: FromIterator<String> {
 }
 
 
-pub fn escape_str(s: &str) -> String {
+pub fn escape_str_in_command(s: &str) -> String {
     let re = regex::Regex::new(r"[\\|#]").unwrap();
     re.replace_all(s, "\\$0").to_string()
 }
 
+#[test]
+fn test_escape_str() {
+    assert_eq!(escape_str_in_command("hoge"), "hoge");
+    assert_eq!(escape_str_in_command("ho#ge"), r"ho\#ge");
+    assert_eq!(escape_str_in_command(r"ho\ge"), r"ho\\ge");
+}
+
+pub fn escape_str_in_expression(s: &str) -> String {
+    let re = regex::Regex::new(r"'").unwrap();
+    re.replace_all(s, "''").to_string()
+}
 
 fn zombie_killer(pid: u32) {
     thread::spawn(move || {

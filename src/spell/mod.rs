@@ -13,6 +13,7 @@ pub enum Spell {
         after: Option<String>,
         before: Option<String>,
         change_directory: bool,
+        envs: Vec<(String, String)>,
         expressions: Vec<String>,
         files: Vec<String>,
         keys: Vec<String>,
