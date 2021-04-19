@@ -139,7 +139,7 @@ pub fn send_files(servername: &str, working_directory: &str, files: &[&str], env
                 .arg(servername)
                 .arg("--remote-expr");
             attach_envs(&mut child, envs);
-            child.arg(format!("execute('cd {}')", escape_str_in_command(working_directory)));
+            child.arg(format!("execute('cd {}')", escape_str_in_expression(working_directory)));
         } else {
             return
         }
