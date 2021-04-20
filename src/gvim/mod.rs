@@ -31,6 +31,17 @@ pub struct Instance {
 }
 
 
+#[derive(Clone)]
+pub struct SendFileOptions<'a> {
+    pub change_directory: bool,
+    pub envs: &'a[(String, String)],
+    pub files: &'a[&'a str],
+    pub servername: &'a str,
+    pub tab: bool,
+    pub working_directory: &'a str,
+}
+
+
 pub const STOCKED_WINDOW_ROLE: &str = "STOCKING";
 pub const SUMMONED_WINDOW_ROLE: &str = "PANTY";
 
@@ -118,9 +129,9 @@ pub fn find_instances_without_panty(visibility: bool) -> Vec<Instance> {
 
 
 
-pub fn send_files(servername: &str, working_directory: &str, files: &[&str], envs: &[(String, String)], tab: bool, change_directory: bool) {
+pub fn send_files(options: SendFileOptions) {
     let mut child = Command::new("gvim");
-    child.current_dir(&working_directory);
+    child.current_dir(&options.working_directory);
 
     fn attach_envs(cmd: &mut Command, envs: &[(String, String)]) {
         for chunk in envs.chunks(10) {
@@ -133,27 +144,27 @@ pub fn send_files(servername: &str, working_directory: &str, files: &[&str], env
         }
     }
 
-    if files.is_empty() {
-        if change_directory {
+    if options.files.is_empty() {
+        if options.change_directory {
             child.arg("--servername")
-                .arg(servername)
+                .arg(options.servername)
                 .arg("--remote-expr");
-            child.arg(format!("execute('cd {}')", escape_str_in_expression(working_directory)));
-            attach_envs(&mut child, envs);
+            child.arg(format!("execute('cd {}')", escape_str_in_expression(options.working_directory)));
+            attach_envs(&mut child, options.envs);
         } else {
             return
         }
     } else {
         child.arg("--servername")
-            .arg(servername);
-        attach_envs(&mut child, envs);
-        child.arg(if tab {"--remote-tab"} else {"--remote"});
-        if change_directory {
-            child.arg(format!("+cd {}", escape_str_in_command(working_directory)));
+            .arg(options.servername);
+        attach_envs(&mut child, options.envs);
+        child.arg(if options.tab {"--remote-tab"} else {"--remote"});
+        if options.change_directory {
+            child.arg(format!("+cd {}", escape_str_in_command(options.working_directory)));
         }
     }
 
-    let spawned = child.args(files).spawn().unwrap();
+    let spawned = child.args(options.files).spawn().unwrap();
     zombie_killer(spawned.id());
 }
 

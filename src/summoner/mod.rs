@@ -51,7 +51,15 @@ pub fn summon(servername: &str, window: Window, options: SummonOptions) {
         }
 
         let files: Vec<&str> = options.files.iter().map(String::as_ref).collect();
-        gvim::send_files(servername, &options.working_directory, &files, &options.envs, false, options.change_directory);
+        let so = gvim::SendFileOptions {
+            servername,
+            working_directory: &options.working_directory,
+            files: &files,
+            envs: &options.envs,
+            tab: false,
+            change_directory: options.change_directory
+        };
+        gvim::send_files(so);
 
         gvim::remote(servername, &options.keys, &options.expressions, false);
     });
