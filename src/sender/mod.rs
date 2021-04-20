@@ -21,12 +21,12 @@ pub fn send_files(working_directory: &str, files: &[&str], tab: bool, use_panty:
 
     if let Some(servername) = servername {
         let so = gvim::SendFileOptions {
-            servername: &servername,
-            working_directory,
-            files: &files,
+            change_directory: false,
             envs: &[], // FIXME ?
+            files: &files,
+            servername: &servername,
             tab,
-            change_directory: false
+            working_directory,
         };
         gvim::send_files(so);
         Some(servername)

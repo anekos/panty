@@ -3,16 +3,18 @@ extern crate argparse;
 extern crate dirs;
 extern crate env_logger;
 extern crate panty;
+extern crate tempfile;
 
 use argparse::{ArgumentParser, Store, StoreOption, List, Collect, StoreFalse, StoreTrue, Print};
 use env_logger::LogBuilder;
 use std::collections::HashSet;
 use std::env::current_dir;
 use std::env;
-use std::io::{stdout, stderr};
+use std::io::{self, stderr, stdout, Read, Write};
 use std::str::FromStr;
 
 use dirs::home_dir;
+use tempfile::NamedTempFile;
 
 use panty::*;
 use panty::gvim::SpawnOptions;
@@ -68,6 +70,7 @@ fn command_summon(silent: bool, socket_filepath: &str, args: Vec<String>) {
     let mut pass_all_envs: bool = false;
     let mut pass_envs: Vec<String> = vec![];
     let mut role = None;
+    let mut stdin: bool = false;
 
     {
         let mut ap = ArgumentParser::new();
@@ -84,6 +87,7 @@ fn command_summon(silent: bool, socket_filepath: &str, args: Vec<String>) {
         ap.refer(&mut pass_all_envs).add_option(&["--all-envs"], StoreTrue, "Pass all current env to remote");
         ap.refer(&mut pass_envs).add_option(&["--env", "-E"], Collect, "Pass the env");
         ap.refer(&mut role).add_option(&["--role", "-r"], StoreOption, "Set window role");
+        ap.refer(&mut stdin).add_option(&["--stdin"], StoreTrue, "Input from STDIN");
 
         ap.parse(args, &mut stdout(), &mut stderr()).map_err(|x| std::process::exit(x)).unwrap();
     }
@@ -102,11 +106,13 @@ fn command_summon(silent: bool, socket_filepath: &str, args: Vec<String>) {
         }
     }
 
+    let stdin_file = if stdin { Some(make_stdin_tempfile()) } else { None };
+
     puts_result(
         silent,
         &spell::cast(
             socket_filepath,
-            &spell::Spell::Summon { after, before, change_directory, envs, expressions, files, keys, nofork, role, working_directory }));
+            &spell::Spell::Summon { after, before, change_directory, envs, expressions, files, keys, nofork, role, stdin_file, working_directory }));
 }
 
 
@@ -172,27 +178,33 @@ fn command_renew(silent: bool, socket_filepath: &str) {
 
 
 fn command_edit(silent: bool, socket_filepath: &str, args: Vec<String>, tab: bool) {
-    let mut files: Vec<String> = vec![];
-    let mut use_panty: bool = true;
     let mut change_directory: bool = false;
+    let mut files: Vec<String> = vec![];
+    let mut stdin: bool = false;
+    let mut use_panty: bool = true;
 
     {
         let mut ap = ArgumentParser::new();
 
         ap.set_description("Send files to gVim");
 
-        ap.refer(&mut files).add_argument("arguments", List, "Files");
-        ap.refer(&mut use_panty).add_option(&["--no-panty", "-P"], StoreFalse, "I am no panty user");
         ap.refer(&mut change_directory).add_option(&["--cd", "-d"], StoreTrue, "Change directory to current directory");
+        ap.refer(&mut files).add_argument("arguments", List, "Files");
+        ap.refer(&mut stdin).add_option(&["--stdin"], StoreTrue, "Input from STDIN");
+        ap.refer(&mut use_panty).add_option(&["--no-panty", "-P"], StoreFalse, "I am no panty user");
 
         ap.parse(args, &mut stdout(), &mut stderr()).map_err(|x| std::process::exit(x)).unwrap();
     }
 
     let working_directory = get_working_directory();
+    let stdin_file = if stdin { Some(make_stdin_tempfile()) } else { None };
 
     let servername = {
         {
-            let ref_files: Vec<&str> = files.iter().map(String::as_ref).collect();
+            let mut ref_files: Vec<&str> = files.iter().map(String::as_ref).collect();
+            if let Some(stdin_file) = stdin_file.as_ref().map(AsRef::as_ref) {
+                ref_files.push(stdin_file);
+            }
             sender::send_files(&working_directory, &ref_files, tab, use_panty)
         } .or_else(move || {
             if use_panty {
@@ -200,16 +212,17 @@ fn command_edit(silent: bool, socket_filepath: &str, args: Vec<String>, tab: boo
                     spell::cast(
                         socket_filepath,
                         &spell::Spell::Summon {
-                            working_directory,
-                            files,
-                            keys: vec![],
-                            envs: vec![], // FIXME ?
-                            expressions: vec![],
-                            role: None,
-                            nofork: false,
                             after: None,
                             before: None,
                             change_directory,
+                            envs: vec![], // FIXME ?
+                            expressions: vec![],
+                            files,
+                            keys: vec![],
+                            nofork: false,
+                            role: None,
+                            stdin_file,
+                            working_directory,
                         }))
             } else {
                 None
@@ -322,4 +335,18 @@ fn main() {
 fn get_working_directory() -> String {
     let working_directory = current_dir().expect("cwd");
     working_directory.to_str().unwrap().to_string()
+}
+
+fn make_stdin_tempfile() -> String {
+    let mut file = NamedTempFile::new().unwrap(); // FIXME
+
+    let mut buffer = vec![];
+    let mut stdin = io::stdin();
+    stdin.read_to_end(&mut buffer).unwrap();
+    file.write(&buffer).unwrap();
+
+    let path = file.into_temp_path();
+    let path: String = path.keep().unwrap().to_str().unwrap().to_owned(); // FIXME
+
+    return path
 }

@@ -15,6 +15,7 @@ pub struct SummonOptions {
     pub files: Vec<String>,
     pub keys: Vec<String>,
     pub role: Option<String>,
+    pub stdin_file: Option<String>,
     pub working_directory: String,
 }
 
@@ -50,14 +51,17 @@ pub fn summon(servername: &str, window: Window, options: SummonOptions) {
              }
         }
 
-        let files: Vec<&str> = options.files.iter().map(String::as_ref).collect();
+        let mut files: Vec<&str> = options.files.iter().map(String::as_ref).collect();
+        if let Some(stdin_file) = options.stdin_file.as_ref().map(AsRef::as_ref) {
+            files.push(stdin_file);
+        }
         let so = gvim::SendFileOptions {
-            servername,
-            working_directory: &options.working_directory,
-            files: &files,
+            change_directory: options.change_directory,
             envs: &options.envs,
+            files: &files,
+            servername,
             tab: false,
-            change_directory: options.change_directory
+            working_directory: &options.working_directory,
         };
         gvim::send_files(so);
 

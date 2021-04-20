@@ -9,6 +9,7 @@ extern crate rustc_serialize;
 extern crate inotify;
 extern crate ctrlc;
 extern crate walkdir;
+extern crate tempfile;
 extern crate rand;
 extern crate libc;
 

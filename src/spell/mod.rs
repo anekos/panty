@@ -19,6 +19,7 @@ pub enum Spell {
         keys: Vec<String>,
         nofork: bool,
         role: Option<String>,
+        stdin_file: Option<String>,
         working_directory: String,
     },
     Broadcast {
