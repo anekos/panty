@@ -343,7 +343,7 @@ fn make_stdin_tempfile() -> String {
     let mut buffer = vec![];
     let mut stdin = io::stdin();
     stdin.read_to_end(&mut buffer).unwrap();
-    file.write(&buffer).unwrap();
+    file.write_all(&buffer).unwrap();
 
     let path = file.into_temp_path();
     let path: String = path.keep().unwrap().to_str().unwrap().to_owned(); // FIXME

@@ -23,16 +23,15 @@ pub fn meditate(stocks: &collector::Stocks, max_stocks: usize, socket_filepath: 
         match stream {
             Ok(mut stream) => {
                 let mut buf: String = "".to_string();
-                match stream.read_to_string(&mut buf).unwrap() {
-                    _ => {
-                        match serde_json::from_str(buf.as_str()).expect("Fail: json::decode") {
-                            Summon { after, before, change_directory, envs, expressions, files, keys, nofork, role, stdin_file, working_directory } =>
-                                summon(
-                                    &stocks.clone(),
-                                    summoner::SummonOptions { after, before, change_directory, envs, expressions, files, keys, role, stdin_file, working_directory },
-                                    &spawn_options,
-                                    nofork,
-                                    stream),
+                stream.read_to_string(&mut buf).unwrap();
+                match serde_json::from_str(buf.as_str()).expect("Fail: json::decode") {
+                    Summon { after, before, change_directory, envs, expressions, files, keys, nofork, role, stdin_file, working_directory } =>
+                        summon(
+                            &stocks.clone(),
+                            summoner::SummonOptions { after, before, change_directory, envs, expressions, files, keys, role, stdin_file, working_directory },
+                            &spawn_options,
+                            nofork,
+                            stream),
                             Broadcast {keys, expressions, conditions} => {
                                 let stocks = stocks.clone();
                                 thread::spawn(move || {
@@ -40,14 +39,12 @@ pub fn meditate(stocks: &collector::Stocks, max_stocks: usize, socket_filepath: 
                                     stream.write_all(output.as_bytes()).unwrap();
                                 });
                             }
-                            Renew => {
-                                let renew_options = RenewOptions::Restart { max_stocks, spawn_options };
-                                collector::renew(stocks.clone(), renew_options);
-                            }
-                            Clean =>
-                                collector::clean(&stocks.clone())
-                        }
+                    Renew => {
+                        let renew_options = RenewOptions::Restart { max_stocks, spawn_options };
+                        collector::renew(stocks.clone(), renew_options);
                     }
+                    Clean =>
+                        collector::clean(&stocks.clone())
                 }
             }
             Err(err) => {

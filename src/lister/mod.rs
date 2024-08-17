@@ -55,10 +55,8 @@ pub fn list<S: BuildHasher + Clone + Send + 'static>(
         let mut result = vec![];
 
         for handle in join_handles {
-            if let Ok(found) = handle.join() {
-                if let Some(instance) = found {
-                    result.push(instance);
-                }
+            if let Ok(Some(instance)) = handle.join() {
+                result.push(instance);
             }
         }
 
