@@ -5,7 +5,8 @@ extern crate core;
 #[macro_use]
 extern crate log;
 extern crate argparse;
-extern crate rustc_serialize;
+extern crate serde;
+extern crate serde_json;
 extern crate inotify;
 extern crate ctrlc;
 extern crate walkdir;

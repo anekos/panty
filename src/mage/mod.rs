@@ -1,5 +1,5 @@
 
-use rustc_serialize::json;
+use serde_json;
 use std::io::{Read, Write};
 use unix_socket::{UnixListener, UnixStream};
 use std::net::Shutdown;
@@ -25,7 +25,7 @@ pub fn meditate(stocks: &collector::Stocks, max_stocks: usize, socket_filepath: 
                 let mut buf: String = "".to_string();
                 match stream.read_to_string(&mut buf).unwrap() {
                     _ => {
-                        match json::decode(buf.as_str()).expect("Fail: json::decode") {
+                        match serde_json::from_str(buf.as_str()).expect("Fail: json::decode") {
                             Summon { after, before, change_directory, envs, expressions, files, keys, nofork, role, stdin_file, working_directory } =>
                                 summon(
                                     &stocks.clone(),

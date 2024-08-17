@@ -1,14 +1,13 @@
+use serde::{Deserialize, Serialize};
 
 use std::collections::HashSet;
 use std::hash::BuildHasher;
 use std::thread;
 
-use gvim;
 use collector::Stocks;
+use gvim;
 
-
-
-#[derive(PartialEq,Eq,Hash,Clone,RustcEncodable,RustcDecodable,Debug)]
+#[derive(PartialEq, Eq, Hash, Clone, Serialize, Deserialize, Debug)]
 pub enum Condition {
     Visible(bool),
     Stocked(bool),
@@ -16,7 +15,6 @@ pub enum Condition {
 }
 
 pub type ConditionSet = HashSet<Condition>;
-
 
 pub fn parse_condition(s: &str) -> Result<ConditionSet, String> {
     use self::Condition::*;
@@ -37,12 +35,14 @@ pub fn parse_condition(s: &str) -> Result<ConditionSet, String> {
     Ok(set)
 }
 
-
-
-pub fn list<S: BuildHasher + Clone + Send + 'static>(stocks: &Option<Stocks>, conditions: &HashSet<Condition, S>) -> Vec<gvim::Instance> {
+pub fn list<S: BuildHasher + Clone + Send + 'static>(
+    stocks: &Option<Stocks>,
+    conditions: &HashSet<Condition, S>,
+) -> Vec<gvim::Instance> {
     let servernames: Vec<String> = gvim::fetch_existing_servernames();
 
-    let join_handles: Vec<_> = servernames.iter()
+    let join_handles: Vec<_> = servernames
+        .iter()
         .map(|servername| {
             let servername = servername.to_owned();
             let conditions = conditions.clone();
@@ -52,7 +52,6 @@ pub fn list<S: BuildHasher + Clone + Send + 'static>(stocks: &Option<Stocks>, co
         .collect();
 
     {
-
         let mut result = vec![];
 
         for handle in join_handles {
@@ -67,8 +66,11 @@ pub fn list<S: BuildHasher + Clone + Send + 'static>(stocks: &Option<Stocks>, co
     }
 }
 
-
-fn condition_match<S: BuildHasher + Clone + Send>(stocks: Option<Stocks>, conditions: HashSet<Condition, S>, servername: &str) -> Option<gvim::Instance> {
+fn condition_match<S: BuildHasher + Clone + Send>(
+    stocks: Option<Stocks>,
+    conditions: HashSet<Condition, S>,
+    servername: &str,
+) -> Option<gvim::Instance> {
     use self::Condition::*;
 
     let stocked_servers: HashSet<String> = if let Some(stocks) = stocks {
@@ -106,5 +108,4 @@ fn condition_match<S: BuildHasher + Clone + Send>(stocks: Option<Stocks>, condit
 
         None
     })
-
 }
