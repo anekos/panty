@@ -23,7 +23,7 @@ pub fn send_files(working_directory: &str, files: &[&str], tab: bool, use_panty:
         let so = gvim::SendFileOptions {
             change_directory: false,
             envs: &[], // FIXME ?
-            files: &files,
+            files,
             servername: &servername,
             tab,
             working_directory,

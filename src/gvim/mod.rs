@@ -131,7 +131,7 @@ pub fn find_instances_without_panty(visibility: bool) -> Vec<Instance> {
 
 pub fn send_files(options: SendFileOptions) {
     let mut child = Command::new("gvim");
-    child.current_dir(&options.working_directory);
+    child.current_dir(options.working_directory);
 
     fn attach_envs(cmd: &mut Command, envs: &[(String, String)]) {
         for chunk in envs.chunks(10) {

@@ -262,7 +262,7 @@ fn command_broadcast(silent: bool, socket_filepath: &str, args: Vec<String>) {
 
     let conditions =
         if let Some(s) = conditions {
-            lister::parse_condition(&*s).unwrap()
+            lister::parse_condition(&s).unwrap()
         } else {
             HashSet::new()
         };
@@ -348,5 +348,5 @@ fn make_stdin_tempfile() -> String {
     let path = file.into_temp_path();
     let path: String = path.keep().unwrap().to_str().unwrap().to_owned(); // FIXME
 
-    return path
+    path
 }

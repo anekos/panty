@@ -81,12 +81,12 @@ fn condition_match<S: BuildHasher + Clone + Send>(
     };
 
     with_display!(display => {
-        if let Some(window) = gvim::fetch_window_id(&servername) {
+        if let Some(window) = gvim::fetch_window_id(servername) {
             let mut matched = true;
             for condition in conditions {
                 let m = match condition {
                     Visible(invert) => invert != is_window_visible(display, window),
-                    Stocked(invert) => invert != stocked_servers.contains(&*servername),
+                    Stocked(invert) => invert != stocked_servers.contains(servername),
                     Panty(invert) => invert != get_text_property(display, window, "_PANTY_SERVERNAME").is_some()
                 };
                 if !m {

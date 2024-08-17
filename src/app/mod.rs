@@ -27,6 +27,6 @@ pub fn start(max_stocks: usize, socket_filepath: &str, watch_targets: Vec<String
 
 fn initialize(socket_filepath: &str) {
     if Path::new(&socket_filepath).exists() {
-        remove_file(&socket_filepath).expect("Faild: remove socket file");
+        remove_file(socket_filepath).expect("Faild: remove socket file");
     }
 }

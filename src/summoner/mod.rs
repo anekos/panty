@@ -23,7 +23,7 @@ pub struct SummonOptions {
 pub fn summon(servername: &str, window: Window, options: SummonOptions) {
 
     if let Some(command_line) = options.before {
-        after(&command_line, &servername, window);
+        after(&command_line, servername, window);
     }
 
     with_display!(display => {
@@ -40,7 +40,7 @@ pub fn summon(servername: &str, window: Window, options: SummonOptions) {
             if let Some(ref role) = options.role {
                 set_window_role(display, window, role.as_str())
             } else {
-                set_window_role(display, window, &gvim::SUMMONED_WINDOW_ROLE);
+                set_window_role(display, window, gvim::SUMMONED_WINDOW_ROLE);
             }
 
              if wait_for_visible(display, window, 100) {
